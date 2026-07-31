@@ -1,3 +1,21 @@
+# 🧭 仓库说明（main-v2 分支，当前默认分支）
+
+这个分支在原始的 Claude Cowork PM 学习指南基础上，新增了个人的「AI 产品经理转型学习系统」项目，是目前实际在用的工作分支。原始内容（v1）完整保留在下方，也可以随时通过 [`main` 分支](https://github.com/wealotwang/claude-cowork-pm-guide/tree/main) 单独查看，两个分支互不影响。
+
+## 当前活跃项目：AI 产品经理转型学习系统
+- 目录：[`AI产品转型学习系统/`](./AI产品转型学习系统/)
+- 当前主项目：`AI Compliance Check Assistant`（结合 Veeva 生命科学软件背景设计的面试作品集项目）
+- 当前进度与下一步：[04-接力说明/00-当前进度与接力说明.md](./AI产品转型学习系统/04-接力说明/00-当前进度与接力说明.md)
+- 完整学习计划：[02-学习计划/00-统一学习计划.md](./AI产品转型学习系统/02-学习计划/00-统一学习计划.md)
+
+## 分支说明
+- `main`：原始版本（v1），完整保留原公司同事整理的 Claude Cowork PM 学习指南，不再改动
+- `main-v2`（当前分支，已设为默认分支）：在 v1 基础上继续维护，新增个人转型学习系统，后续所有更新都在这个分支进行
+
+---
+
+## 📚 以下为原始内容（v1：Claude Cowork PM 学习指南，完整保留未改动）
+
 <div align="center">
   <h1>🤖 Claude Cowork for Product Managers</h1>
   <p><strong>面向产品经理的 AI-Native 工作流进阶与自学路线</strong></p>
