@@ -74,9 +74,10 @@
 - 统一学习总纲与离线手册整理
 - Day01：定义 AI compliance check 的基本产品边界与规则雏形
 - Day02：规则模板 v1 定稿（含2条完整规则示例），详见 [规则模板-v1.md](./03-学习成果/规则模板-v1.md)
+- Day03 进行中：导入并评审了一份 CRM Compliance Eval 框架（10类风险 + 50条case），决定文档保留全貌、demo 只做 01/05/07/10 四类子集，详见 [CRM-Compliance-Eval框架说明.md](./03-学习成果/CRM-Compliance-Eval框架说明.md)
 
 当前下一步：
-- Day03：把规则转化为 20-30 条评测集，随后按压缩排期推进：可运行原型 demo → 迭代对比 → 竞品/行业调研 → 面试 README + 讲稿
+- Day03 收尾：评测集合并去重、补齐条数、定稿学习卡；随后按压缩排期推进：可运行原型 demo（4类子集）→ 迭代对比 → 竞品/行业调研 → 面试 README + 讲稿
 
 ### 关键背景（影响后续排期）
 用户是 Veeva 产品经理，转型 AI 产品经理，求职/面试时间线是几周内，作品集需要包含能跑的demo。详见 [04-接力说明/00-当前进度与接力说明.md](file:///Users/li/ai%20pm%20learning/claude-cowork-pm-guide/AI产品转型学习系统/04-接力说明/00-当前进度与接力说明.md) 第0节和 [02-学习计划/00-统一学习计划.md](file:///Users/li/ai%20pm%20learning/claude-cowork-pm-guide/AI产品转型学习系统/02-学习计划/00-统一学习计划.md)。
