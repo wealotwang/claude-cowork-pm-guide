@@ -75,9 +75,10 @@
 - Day01：定义 AI compliance check 的基本产品边界与规则雏形
 - Day02：规则模板 v1 定稿（含2条完整规则示例），详见 [规则模板-v1.md](./03-学习成果/规则模板-v1.md)
 - Day03 进行中：导入并评审了一份 CRM Compliance Eval 框架（10类风险 + 50条case），决定文档保留全貌、demo 只做 01/05/07/10 四类子集，详见 [CRM-Compliance-Eval框架说明.md](./03-学习成果/CRM-Compliance-Eval框架说明.md)
+- Day04：完成对 eval 方案的产品化复盘，确认高危/中低危指标差异、MVP 阶段 case 收敛策略，并沉淀 HTML 版评估方案，见 [crm-compliance-checker-eval-v1.html](./03-学习成果/crm-compliance-checker-eval-v1.html)
 
 当前下一步：
-- Day03 收尾：评测集合并去重、补齐条数、定稿学习卡；随后按压缩排期推进：可运行原型 demo（4类子集）→ 迭代对比 → 竞品/行业调研 → 面试 README + 讲稿
+- Day05：把现有规则模板 + 评测集 + HTML 评估方案收束成最小可运行 demo（4类子集）；随后按压缩排期推进：迭代对比 → 竞品/行业调研 → 面试 README + 讲稿
 
 ### 关键背景（影响后续排期）
 用户是 Veeva 产品经理，转型 AI 产品经理，求职/面试时间线是几周内，作品集需要包含能跑的demo。详见 [04-接力说明/00-当前进度与接力说明.md](file:///Users/li/ai%20pm%20learning/claude-cowork-pm-guide/AI产品转型学习系统/04-接力说明/00-当前进度与接力说明.md) 第0节和 [02-学习计划/00-统一学习计划.md](file:///Users/li/ai%20pm%20learning/claude-cowork-pm-guide/AI产品转型学习系统/02-学习计划/00-统一学习计划.md)。
@@ -90,6 +91,8 @@
 - [04-接力说明/00-当前进度与接力说明.md](file:///Users/li/ai%20pm%20learning/claude-cowork-pm-guide/AI产品转型学习系统/04-接力说明/00-当前进度与接力说明.md)
 - [02-学习计划/00-统一学习计划.md](file:///Users/li/ai%20pm%20learning/claude-cowork-pm-guide/AI产品转型学习系统/02-学习计划/00-统一学习计划.md)
 - [03-学习成果/Day01-学习卡.md](file:///Users/li/ai%20pm%20learning/claude-cowork-pm-guide/AI产品转型学习系统/03-学习成果/Day01-学习卡.md)
+- [03-学习成果/Day04-学习卡.md](file:///Users/li/ai%20pm%20learning/claude-cowork-pm-guide/AI产品转型学习系统/03-学习成果/Day04-学习卡.md)
+- [03-学习成果/crm-compliance-checker-eval-v1.html](file:///Users/li/ai%20pm%20learning/claude-cowork-pm-guide/AI产品转型学习系统/03-学习成果/crm-compliance-checker-eval-v1.html)
 
 同时可参考仓库根目录中的历史文件：
 - [overall-learning-plan-zh.md](file:///Users/li/ai%20pm%20learning/claude-cowork-pm-guide/overall-learning-plan-zh.md)
