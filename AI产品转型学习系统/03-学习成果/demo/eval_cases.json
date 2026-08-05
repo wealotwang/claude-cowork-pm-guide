@@ -1,0 +1,40 @@
+{
+  "version": "v1",
+  "updated": "2026-07-31",
+  "note": "合并自 评测集-v1.md（自拟case）+ CRM-Compliance-Eval框架说明.md 筛选的01/05/07/10类case，仅保留demo范围(4类)内的。用于 run_eval.py 跑基线分数。",
+  "cases": [
+    {"id": "01-v-1", "input": "这个月表现不错，给你包个红包", "expected_category": "01", "expected_action": "Reject", "type": "violation"},
+    {"id": "01-v-2", "input": "手术量上去了，后面会有点意思表示", "expected_category": "01", "expected_action": "Reject", "type": "violation"},
+    {"id": "01-v-3", "input": "这季度冲一下量，私下再给你补差价", "expected_category": "01", "expected_action": "Reject", "type": "violation"},
+    {"id": "01-v-4", "input": "与刘副院长沟通，表示只要本月完成200盒用量，我们将按比例回扣现金", "expected_category": "01", "expected_action": "Reject", "type": "violation", "source": "CRM框架 case002"},
+    {"id": "01-v-5", "input": "按每张处方额外提供50元学术津贴的方式，鼓励科室青年医生优先开具我药", "expected_category": "01", "expected_action": "Reject", "type": "violation", "source": "CRM框架 case005"},
+    {"id": "01-b-1", "input": "感谢教授一直以来的指导，受益匪浅", "expected_category": "10", "expected_action": "Pass", "type": "boundary", "note": "纯礼貌用语，无利益交换，不应误判01类"},
+    {"id": "01-b-2", "input": "本次讲者费用2000元，会通过公司正规渠道转账并开票", "expected_category": "10", "expected_action": "Pass", "type": "boundary", "note": "合规讲者费，不应误判01类"},
+    {"id": "01-b-3", "input": "邀请您参加下周学术研讨会，提供交通食宿补贴", "expected_category": "10", "expected_action": "Pass", "type": "boundary", "note": "行业惯例的会议差旅补贴，不应误判01类"},
+
+    {"id": "07-v-1", "input": "吃了咱们这个药，病包好，一次断根", "expected_category": "07", "expected_action": "Warning", "type": "violation", "note": "模式A 绝对化承诺"},
+    {"id": "07-v-2", "input": "说明书没写儿童用量，但我们内部都这么给孩子加量用", "expected_category": "07", "expected_action": "Warning", "type": "violation", "note": "模式B 超说明书推广"},
+    {"id": "07-v-3", "input": "那个不良反应提示您别太当真，基本不会发生", "expected_category": "07", "expected_action": "Warning", "type": "violation", "note": "模式C 隐瞒风险"},
+    {"id": "07-v-4", "input": "隔壁那家药就是垃圾，早该淘汰了，我们的强十倍", "expected_category": "07", "expected_action": "Warning", "type": "violation", "note": "模式D 贬低竞品"},
+    {"id": "07-v-5", "input": "向医生宣讲我药是同类中唯一能100%根治且绝对零副作用的黄金选择", "expected_category": "07", "expected_action": "Warning", "type": "violation", "source": "CRM框架 case028"},
+    {"id": "07-v-6", "input": "向主任强调该药物没有任何禁忌症，所有人群皆可放心使用", "expected_category": "07", "expected_action": "Warning", "type": "violation", "source": "CRM框架 case032"},
+    {"id": "07-b-1", "input": "根据该药III期临床研究（N=1000）公布的数据，患者的客观缓解率（ORR）达到了65%", "expected_category": "10", "expected_action": "Pass", "type": "boundary", "note": "有出处的客观数据引用，不应误判07类"},
+    {"id": "07-b-2", "input": "部分专家在临床沟通中提及，该药在缓解某些症状上反馈较好，但具体用药方案仍需结合患者个体体征评估", "expected_category": "10", "expected_action": "Pass", "type": "boundary", "note": "带审慎限定语的临床反馈，不应误判07类"},
+    {"id": "07-b-3", "input": "该药经批准用于配合饮食和运动控制，改善二型糖尿病成人的血糖控制", "expected_category": "10", "expected_action": "Pass", "type": "boundary", "note": "严格基于批准适应症的客观描述"},
+    {"id": "07-b-4", "input": "关于您问到的这个超适应症研究，目前属于纯学术探索阶段，尚未获得监管机构批准，相关文献数据仅供学术交流参考", "expected_category": "10", "expected_action": "Pass", "type": "boundary", "note": "带明确合规声明的学术探讨"},
+
+    {"id": "05-v-1", "input": "跟踪重点患者，身份证号310101199001011234，电话13800001111，附带完整门诊病历", "expected_category": "05", "expected_action": "Block", "type": "violation", "note": "身份证号+手机号均为合成测试数据，非真实"},
+    {"id": "05-v-2", "input": "记录了患者联系电话13912345678以便后续随访", "expected_category": "05", "expected_action": "Block", "type": "violation", "note": "手机号为合成测试数据"},
+    {"id": "05-gap-1", "input": "记录了特殊患者赵六的完整体检报告和电话号码以便后期随访", "expected_category": "05", "expected_action": "Block", "type": "known_gap", "note": "只提到'电话号码'但没有实际数字串，regex前置层测不出来，属于demo已知局限（非结构化PII识别未覆盖），跑eval时预期会miss，用于证明我们清楚自己没覆盖什么"},
+    {"id": "05-b-1", "input": "拜访了心内科张主任，针对其提出的用药问题进行了专业解答", "expected_category": "10", "expected_action": "Pass", "type": "boundary", "note": "完全不涉及可识别患者信息，不应误判05类"},
+    {"id": "05-nm-1", "input": "科室有位患者最近血糖控制不佳，张主任想了解一下我们药物在这种情况下的使用建议", "expected_category": "10", "expected_action": "Pass", "type": "near_miss", "note": "提到'患者'但无可识别信息，不应仅因出现'患者'二字就误判05类"},
+
+    {"id": "10-b-1", "input": "今天去科室拜访，和李医生搞好了关系，李医生表示以后会多关注我们产品", "expected_category": "10", "expected_action": "Pass", "type": "boundary", "note": "口语化但合规"},
+    {"id": "10-b-2", "input": "向心内科张主任递交了产品批准说明书，并客观介绍了说明书涵盖的适应症和用法用量", "expected_category": "10", "expected_action": "Pass", "type": "boundary"},
+    {"id": "10-b-3", "input": "成功搞定了张主任，主任答应在科室内部帮忙宣传我们的学术观念", "expected_category": "10", "expected_action": "Pass", "type": "boundary", "source": "CRM框架 case043"},
+    {"id": "10-b-4", "input": "应医生要求，提供了已公开发表的关于药品安全性的循证医学文献供其临床参考", "expected_category": "10", "expected_action": "Pass", "type": "boundary", "source": "CRM框架 case047"},
+    {"id": "10-nm-1", "input": "跟主任聊得很投机，他说以后会多帮忙推荐我们产品", "expected_category": "10", "expected_action": "Pass", "type": "near_miss", "note": "容易被误判成01类对价化，但没有任何金钱/利益交换，只是口语化人情往来"},
+    {"id": "10-irr-1", "input": "下午三点和王医生约了个电话会议，确认一下下周拜访安排", "expected_category": "10", "expected_action": "Pass", "type": "baseline_irrelevant"},
+    {"id": "10-irr-2", "input": "今天路上堵车，比预计时间晚到了半小时", "expected_category": "10", "expected_action": "Pass", "type": "baseline_irrelevant"}
+  ]
+}
