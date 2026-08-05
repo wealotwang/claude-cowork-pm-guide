@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Compliance Eval 设计学习报告与方法论沉淀</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            900: '#1e3a8a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+        .gradient-text {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .gradient-card-header {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased selection:bg-blue-100 selection:text-blue-900 min-h-screen pb-20">
+
+    <!-- Top Navigation Header -->
+    <header class="sticky top-0 z-50 bg-slate-900/95 backdrop-blur border-b border-slate-800 text-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white font-bold shadow-lg shadow-blue-500/20">
+                    <i class="fa-solid fa-brain text-sm"></i>
+                </div>
+                <div>
+                    <span class="text-sm font-bold tracking-tight block">AI Guardrail Quality Engineering</span>
+                    <span class="text-[10px] text-slate-400 block -mt-1">Evals Architecture & Methodology Report</span>
+                </div>
+            </div>
+            <div class="flex items-center gap-3 text-xs">
+                <span class="hidden sm:inline-block px-2.5 py-1 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
+                    <i class="fa-regular fa-clock mr-1 text-blue-400"></i> 复盘日期：2026-08-03
+                </span>
+                <button onclick="window.print()" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-lg transition shadow-sm flex items-center gap-1.5">
+                    <i class="fa-solid fa-print"></i> 打印 / 导出 PDF
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Hero Banner -->
+    <section class="bg-slate-900 text-white border-b border-slate-800 pt-12 pb-16 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-5xl mx-auto text-center">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-400/20 text-blue-300 text-xs font-medium mb-6">
+                <span class="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></span>
+                方法论沉淀与实践总结
+            </div>
+            <h1 class="text-3xl sm:text-5xl font-extrabold tracking-tight mb-4 leading-tight">
+                AI Compliance Eval 设计学习报告
+            </h1>
+            <p class="text-base sm:text-lg text-slate-300 max-w-3xl mx-auto font-normal leading-relaxed">
+                记录 Medical CRM Compliance Checker Eval 方案设计过程中的认知重塑、架构迭代与通用方法论沉淀。
+            </p>
+            
+            <!-- Key Takeaway Banner Highlight -->
+            <div class="mt-8 p-6 rounded-2xl bg-gradient-to-r from-blue-950/80 via-slate-900 to-indigo-950/80 border border-blue-500/30 shadow-2xl text-left max-w-4xl mx-auto relative overflow-hidden">
+                <div class="absolute -right-10 -bottom-10 opacity-10 text-white text-9xl">
+                    <i class="fa-solid fa-quote-right"></i>
+                </div>
+                <div class="flex items-start gap-4 relative z-10">
+                    <div class="p-3 bg-blue-600/20 border border-blue-400/30 rounded-xl text-blue-400 text-xl flex-shrink-0">
+                        <i class="fa-solid fa-lightbulb"></i>
+                    </div>
+                    <div>
+                        <div class="text-xs font-semibold uppercase tracking-wider text-blue-300 mb-1">终极核心金句 (The Golden Rule)</div>
+                        <p class="text-base sm:text-lg font-medium text-slate-100 leading-snug">
+                            “AI Eval 的设计，不应该从模型出发，而应该从业务风险出发。<br>
+                            核心问题不是 <span class="text-amber-300 underline underline-offset-4 decoration-amber-400/50">‘模型有没有分对’</span>，而是 <span class="text-emerald-300 underline underline-offset-4 decoration-emerald-400/50">‘业务风险有没有被可靠控制住’</span>。”
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6 space-y-10 relative z-20">
+
+        <!-- Section 1: 认知转向与理念对比 -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="p-6 sm:p-8 border-b border-slate-100">
+                <div class="flex items-center gap-2 text-blue-600 font-bold text-xs uppercase tracking-wider mb-1">
+                    <i class="fa-solid fa-compass"></i> Chapter 01
+                </div>
+                <h2 class="text-xl sm:text-2xl font-bold text-slate-900">最大的认知转变：学术分级 vs 业务上线门槛</h2>
+                <p class="text-slate-600 text-xs sm:text-sm mt-1 leading-relaxed">
+                    初期的思路陷入了传统 Machine Learning Benchmark 的定势，试图全面度量 AI 的“聪明程度”。最终调整为以企业产品的“上线风险验收（Release Gate）”为唯一考量标准。
+                </p>
+            </div>
+
+            <div class="p-6 sm:p-8 bg-slate-50/50 grid md:grid-cols-2 gap-6">
+                <!-- Academic Benchmark -->
+                <div class="p-5 rounded-xl bg-white border border-slate-200 shadow-sm relative">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-xs font-bold px-2.5 py-1 rounded-md bg-slate-100 text-slate-600 border border-slate-200">
+                            ❌ 早期陷阱：ML Benchmark 模式
+                        </span>
+                        <i class="fa-solid fa-microscope text-slate-400"></i>
+                    </div>
+                    <ul class="space-y-3 text-xs sm:text-sm text-slate-600">
+                        <li class="flex items-start gap-2">
+                            <i class="fa-solid fa-xmark text-red-500 mt-1"></i>
+                            <span><strong>关注点：</strong> Evaluate AI Capability（模型有多聪明、分类有多准）。</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fa-solid fa-xmark text-red-500 mt-1"></i>
+                            <span><strong>指标追求：</strong> Category Accuracy, Severity Accuracy, Boundary Precision 等大量维度。</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fa-solid fa-xmark text-red-500 mt-1"></i>
+                            <span><strong>痛点：</strong> 指标繁杂且重叠（如 Recall 与 False Negative Rate 重复），无法清晰回答“能否上线”。</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Enterprise Release Gate -->
+                <div class="p-5 rounded-xl bg-blue-50/50 border border-blue-200/80 shadow-sm relative">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-xs font-bold px-2.5 py-1 rounded-md bg-blue-100 text-blue-700 border border-blue-200">
+                            ✅ 最终演进：Business Risk Gate 模式
+                        </span>
+                        <i class="fa-solid fa-[#0284c7] fa-shield-halved text-blue-600"></i>
+                    </div>
+                    <ul class="space-y-3 text-xs sm:text-sm text-slate-700">
+                        <li class="flex items-start gap-2">
+                            <i class="fa-solid fa-check text-emerald-600 mt-1"></i>
+                            <span><strong>关注点：</strong> Validate Business Risk（能否在真实商业场景中可靠阻止不可接受的合规风险）。</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fa-solid fa-check text-emerald-600 mt-1"></i>
+                            <span><strong>指标精简：</strong> 极致压缩为高危召回率、误报率与解释可用性，直接映射业务损失。</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fa-solid fa-check text-emerald-600 mt-1"></i>
+                            <span><strong>成果：</strong> 决策边界清晰，符合 Release Gate（上线硬门槛）的企业定位。</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: 数据与策略解耦 (Data vs. Policy) -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="p-6 sm:p-8 border-b border-slate-100">
+                <div class="flex items-center gap-2 text-blue-600 font-bold text-xs uppercase tracking-wider mb-1">
+                    <i class="fa-solid fa-cubes"></i> Chapter 02
+                </div>
+                <h2 class="text-xl sm:text-2xl font-bold text-slate-900">核心架构调整：数据（Dataset）与策略（Policy）彻底解耦</h2>
+                <p class="text-slate-600 text-xs sm:text-sm mt-1 leading-relaxed">
+                    在案例属性中删除 `Must Detect = Yes` 字段，实现了数据与商业风控规则的经典软件架构分离。
+                </p>
+            </div>
+
+            <div class="p-6 sm:p-8 space-y-6">
+                <!-- Concept Diagram -->
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="p-5 rounded-xl bg-slate-900 text-slate-200 font-mono text-xs space-y-2 border border-slate-800">
+                        <div class="text-slate-400 border-b border-slate-800 pb-2 font-sans font-bold flex justify-between">
+                            <span>📄 Dataset (客观事实数据)</span>
+                            <span class="text-emerald-400">Immutable Facts</span>
+                        </div>
+                        <p class="text-slate-400">// 描述案例本身的客观属性，不夹杂企业要求</p>
+                        <p><span class="text-purple-400">Case_ID</span>: "001"</p>
+                        <p><span class="text-purple-400">Text</span>: "现金奖励医生开具处方"</p>
+                        <p><span class="text-purple-400">Violation</span>: <span class="text-emerald-300">true</span></p>
+                        <p><span class="text-purple-400">Category</span>: "Bribery"</p>
+                        <p><span class="text-purple-400">Risk_Level</span>: <span class="text-red-400">"Critical"</span> <span class="text-slate-500">// 客观危险度</span></p>
+                    </div>
+
+                    <div class="p-5 rounded-xl bg-indigo-950 text-indigo-100 font-mono text-xs space-y-2 border border-indigo-900">
+                        <div class="text-indigo-300 border-b border-indigo-900/80 pb-2 font-sans font-bold flex justify-between">
+                            <span>⚙️ Evaluation Policy (企业风控策略)</span>
+                            <span class="text-blue-400">Configurable Rules</span>
+                        </div>
+                        <p class="text-indigo-400">// 描述企业根据自身风险偏好制定的容忍指标</p>
+                        <p><span class="text-amber-300">Policy_Rules</span>: {</p>
+                        <p class="pl-4"><span class="text-red-300">"Critical"</span>: { <span class="text-blue-300">Required_Recall</span>: <span class="text-emerald-300">1.00</span> }, <span class="text-slate-400">// 100% 召回</span></p>
+                        <p class="pl-4"><span class="text-amber-300">"High"</span>: { <span class="text-blue-300">Required_Recall</span>: <span class="text-emerald-300">0.95</span> },</p>
+                        <p class="pl-4"><span class="text-blue-300">"False_Alarm_Cap"</span>: <span class="text-emerald-300">0.10</span></p>
+                        <p>}</p>
+                    </div>
+                </div>
+
+                <div class="p-4 rounded-xl bg-amber-50 border border-amber-200/80 text-xs text-amber-900 leading-relaxed flex items-start gap-3">
+                    <i class="fa-solid fa-triangle-exclamation text-amber-600 text-sm mt-0.5"></i>
+                    <div>
+                        <strong>为什么删除 `Must Detect`？</strong>
+                        “现金奖励医生”是一个客观事实，它本身并不携带“必须100%识别”的指令。真正要求100%识别的是<strong>企业当下的合规政策</strong>。把两者解耦后，当未来合规政策变宽松或变严格时，只需修改 Policy 配置，无需重新标注整个基准数据集（Dataset）。
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: 指标分层体系 -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="p-6 sm:p-8 border-b border-slate-100">
+                <div class="flex items-center gap-2 text-blue-600 font-bold text-xs uppercase tracking-wider mb-1">
+                    <i class="fa-solid fa-chart-line"></i> Chapter 03
+                </div>
+                <h2 class="text-xl sm:text-2xl font-bold text-slate-900">上线指标 (Release Gate) vs 诊断指标 (Diagnostic Metrics)</h2>
+                <p class="text-slate-600 text-xs sm:text-sm mt-1 leading-relaxed">
+                    告别指标堆砌，将 Metrics 明确区分为“决定能否发布”和“用于内部分析诊断”两大层级。
+                </p>
+            </div>
+
+            <div class="p-6 sm:p-8 space-y-6">
+                <div class="grid md:grid-cols-2 gap-6">
+                    <!-- Release Metrics -->
+                    <div class="border border-red-200 rounded-xl overflow-hidden bg-red-50/20">
+                        <div class="bg-red-900 text-white p-4 flex items-center justify-between">
+                            <span class="font-bold text-sm"><i class="fa-solid fa-lock mr-2"></i> 上线关卡指标 (Release Metrics)</span>
+                            <span class="text-[10px] bg-red-800 px-2 py-0.5 rounded border border-red-700">一票否决门槛</span>
+                        </div>
+                        <div class="p-4 space-y-3 text-xs">
+                            <div class="p-3 bg-white rounded-lg border border-red-100 shadow-sm">
+                                <div class="font-bold text-slate-800 justify-between flex">
+                                    <span>1. 重大违规召回率 (Critical Recall)</span>
+                                    <span class="text-red-600">目标: 100%</span>
+                                </div>
+                                <p class="text-slate-500 text-[11px] mt-1">商业贿赂、统方、超适应症、隐瞒PV绝对零漏报 (FN=0)。</p>
+                            </div>
+                            <div class="p-3 bg-white rounded-lg border border-red-100 shadow-sm">
+                                <div class="font-bold text-slate-800 justify-between flex">
+                                    <span>2. 误报率 (False Alarm Rate)</span>
+                                    <span class="text-emerald-600">目标: ≤ 10%</span>
+                                </div>
+                                <p class="text-slate-500 text-[11px] mt-1">抗过度敏感，确保不误拦正当学术沟通，保障代表体验。</p>
+                            </div>
+                            <div class="p-3 bg-white rounded-lg border border-red-100 shadow-sm">
+                                <div class="font-bold text-slate-800 justify-between flex">
+                                    <span>3. 拦截建议可用性 (Explanation Usability)</span>
+                                    <span class="text-blue-600">目标: ≥ 90%</span>
+                                </div>
+                                <p class="text-slate-500 text-[11px] mt-1">AI 输出的打回修改建议必须专业且符合医学合规规范。</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Diagnostic Metrics -->
+                    <div class="border border-slate-200 rounded-xl overflow-hidden bg-slate-50/40">
+                        <div class="bg-slate-800 text-white p-4 flex items-center justify-between">
+                            <span class="font-bold text-sm"><i class="fa-solid fa-wrench mr-2"></i> 诊断排查指标 (Diagnostic Metrics)</span>
+                            <span class="text-[10px] bg-slate-700 px-2 py-0.5 rounded border border-slate-600">迭代优化仪表盘</span>
+                        </div>
+                        <div class="p-4 space-y-3 text-xs">
+                            <div class="p-3 bg-white rounded-lg border border-slate-200 shadow-sm">
+                                <div class="font-bold text-slate-800 justify-between flex">
+                                    <span>1. 分类准确率 (Category Accuracy)</span>
+                                    <span class="text-slate-500 font-normal">仅作参考</span>
+                                </div>
+                                <p class="text-slate-500 text-[11px] mt-1">即使将“超适应症”误分类为“虚假宣传”，只要成功拦截，业务风险即消失！不阻塞上线。</p>
+                            </div>
+                            <div class="p-3 bg-white rounded-lg border border-slate-200 shadow-sm">
+                                <div class="font-bold text-slate-800 justify-between flex">
+                                    <span>2. 风险细分分布 (Category Coverage)</span>
+                                    <span class="text-slate-500 font-normal">看板呈现</span>
+                                </div>
+                                <p class="text-slate-500 text-[11px] mt-1">监控模型对 Top 10 各分类的表现薄弱点，用于后期针对性 Prompt 调优。</p>
+                            </div>
+                            <div class="p-3 bg-white rounded-lg border border-slate-200 shadow-sm">
+                                <div class="font-bold text-slate-800 justify-between flex">
+                                    <span>3. 边界混淆矩阵 (Boundary Confusions)</span>
+                                    <span class="text-slate-500 font-normal">定位死因</span>
+                                </div>
+                                <p class="text-slate-500 text-[11px] mt-1">分析中危与低危边界处的误判规律。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Human-in-the-loop & Dataset Strategy -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="p-6 sm:p-8 border-b border-slate-100">
+                <div class="flex items-center gap-2 text-blue-600 font-bold text-xs uppercase tracking-wider mb-1">
+                    <i class="fa-solid fa-users-gear"></i> Chapter 04
+                </div>
+                <h2 class="text-xl sm:text-2xl font-bold text-slate-900">人类专家重定位 & 数据集构建策略</h2>
+                <p class="text-slate-600 text-xs sm:text-sm mt-1 leading-relaxed">
+                    人类专家不逐条打分，而是聚焦于事前标集与事后失败案例诊断；测试集追求风险覆盖而非无谓等待真实数据。
+                </p>
+            </div>
+
+            <div class="p-6 sm:p-8 grid md:grid-cols-2 gap-8">
+                <!-- Human Role Shift -->
+                <div>
+                    <h3 class="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-purple-600"></span>
+                        Human-in-the-Loop 定位精简
+                    </h3>
+                    <div class="p-4 bg-purple-50/50 border border-purple-100 rounded-xl space-y-3 text-xs leading-relaxed">
+                        <div class="flex items-start gap-2">
+                            <span class="font-bold text-purple-700 bg-purple-100 px-1.5 py-0.5 rounded text-[10px] uppercase">事前</span>
+                            <p class="text-slate-700"><strong>建集与标集：</strong>合规专家一次性定义 Risk Taxonomy 并完成 Golden Label 标注。</p>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <span class="font-bold text-blue-700 bg-blue-100 px-1.5 py-0.5 rounded text-[10px] uppercase">事中</span>
+                            <p class="text-slate-700"><strong>全自动跑测：</strong>脚本在 CI/CD 流水线中自动比对打分，零人工介入。</p>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <span class="font-bold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded text-[10px] uppercase">事后</span>
+                            <p class="text-slate-700"><strong>定向抽样复核：</strong>专家仅需分析漏报死因（Failure Case）与抽查修改建议质量（20%）。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Synthetic / Risk-Taxonomy Dataset -->
+                <div>
+                    <h3 class="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-blue-600"></span>
+                        测试集构建：告别“等待真实数据”陷阱
+                    </h3>
+                    <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3 text-xs leading-relaxed">
+                        <p class="text-slate-700">
+                            <strong>认知打破：</strong>上线前生产环境根本没有真实数据。若一直等待真实日志，Eval 将永远无法启动。
+                        </p>
+                        <p class="text-slate-700">
+                            <strong>构建原则：</strong>基于 <strong>Risk Taxonomy (风险分类拓扑)</strong> 构造预置 Benchmark。Case 的作用是<strong>覆盖高危变体与风险模式</strong>，而不是随机采样。
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 5: 7-Step Method Pipeline -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="p-6 sm:p-8 border-b border-slate-100">
+                <div class="flex items-center gap-2 text-blue-600 font-bold text-xs uppercase tracking-wider mb-1">
+                    <i class="fa-solid fa-diagram-project"></i> Chapter 05
+                </div>
+                <h2 class="text-xl sm:text-2xl font-bold text-slate-900">最终形成的 AI Eval 7 步闭环方法论</h2>
+                <p class="text-slate-600 text-xs sm:text-sm mt-1 leading-relaxed">
+                    从分类定义到自动化运行，再到失败案例回流，构建可持续演进的 Eval 体系。
+                </p>
+            </div>
+
+            <div class="p-6 sm:p-8">
+                <div class="grid sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+                    <!-- Step 1 -->
+                    <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl text-center relative">
+                        <div class="w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center mx-auto mb-2">1</div>
+                        <div class="text-xs font-bold text-slate-800 mb-1">定义分类</div>
+                        <div class="text-[10px] text-slate-500 leading-tight">Compliance 制定 Risk Taxonomy</div>
+                    </div>
+                    <!-- Step 2 -->
+                    <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl text-center relative">
+                        <div class="w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center mx-auto mb-2">2</div>
+                        <div class="text-xs font-bold text-slate-800 mb-1">构造基准集</div>
+                        <div class="text-[10px] text-slate-500 leading-tight">编写 Benchmark 50 Cases</div>
+                    </div>
+                    <!-- Step 3 -->
+                    <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl text-center relative">
+                        <div class="w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center mx-auto mb-2">3</div>
+                        <div class="text-xs font-bold text-slate-800 mb-1">设定策略</div>
+                        <div class="text-[10px] text-slate-500 leading-tight">定义 Policy (Recall=100%)</div>
+                    </div>
+                    <!-- Step 4 -->
+                    <div class="p-3 bg-indigo-50 border border-indigo-200 rounded-xl text-center relative">
+                        <div class="w-6 h-6 rounded-full bg-indigo-600 text-white text-xs font-bold flex items-center justify-center mx-auto mb-2">4</div>
+                        <div class="text-xs font-bold text-indigo-900 mb-1">自动跑测</div>
+                        <div class="text-[10px] text-indigo-700 leading-tight">CI/CD 跑脚本计算指标</div>
+                    </div>
+                    <!-- Step 5 -->
+                    <div class="p-3 bg-indigo-50 border border-indigo-200 rounded-xl text-center relative">
+                        <div class="w-6 h-6 rounded-full bg-indigo-600 text-white text-xs font-bold flex items-center justify-center mx-auto mb-2">5</div>
+                        <div class="text-xs font-bold text-indigo-900 mb-1">生成门槛</div>
+                        <div class="text-[10px] text-indigo-700 leading-tight">对比 Release Metrics 判定</div>
+                    </div>
+                    <!-- Step 6 -->
+                    <div class="p-3 bg-purple-50 border border-purple-200 rounded-xl text-center relative">
+                        <div class="w-6 h-6 rounded-full bg-purple-600 text-white text-xs font-bold flex items-center justify-center mx-auto mb-2">6</div>
+                        <div class="text-xs font-bold text-purple-900 mb-1">专家死因分析</div>
+                        <div class="text-[10px] text-purple-700 leading-tight">Review Failure Cases</div>
+                    </div>
+                    <!-- Step 7 -->
+                    <div class="p-3 bg-purple-50 border border-purple-200 rounded-xl text-center relative">
+                        <div class="w-6 h-6 rounded-full bg-purple-600 text-white text-xs font-bold flex items-center justify-center mx-auto mb-2">7</div>
+                        <div class="text-xs font-bold text-purple-900 mb-1">更新基准</div>
+                        <div class="text-[10px] text-purple-700 leading-tight">吸收漏报补充新 Case</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 6: Universal AI Eval Checklist (Interactive) -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="p-6 sm:p-8 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <div class="flex items-center gap-2 text-blue-600 font-bold text-xs uppercase tracking-wider mb-1">
+                        <i class="fa-solid fa-square-check"></i> Universal Checklist
+                    </div>
+                    <h2 class="text-xl sm:text-2xl font-bold text-slate-900">通用 AI Eval 设计自查清单 (Checklist)</h2>
+                    <p class="text-slate-600 text-xs sm:text-sm mt-1">适用于合同审核、金融风控、客服质检、企业知识库等所有 Guardrail 场景</p>
+                </div>
+                <!-- Progress Indicator -->
+                <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 text-center min-w-[140px]">
+                    <div class="text-[10px] text-slate-500 font-bold uppercase mb-1">自查完成度</div>
+                    <div class="text-xl font-black text-blue-600 font-mono" id="progressText">0 / 7</div>
+                    <div class="w-full bg-slate-200 h-1.5 rounded-full mt-1 overflow-hidden">
+                        <div id="progressBar" class="bg-blue-600 h-full w-0 transition-all duration-300"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-6 sm:p-8 space-y-3" id="checklistContainer">
+                <!-- Items managed by JS or rendered cleanly -->
+                <label class="flex items-start gap-3 p-3 rounded-xl border border-slate-200 hover:bg-slate-50 transition cursor-pointer text-xs sm:text-sm">
+                    <input type="checkbox" onchange="updateProgress()" class="mt-1 rounded text-blue-600 focus:ring-blue-500 w-4 h-4">
+                    <div>
+                        <strong class="text-slate-900">1. 业务导向原则：</strong> 是否已先定义业务风控目标，再定义模型评估指标？（拒绝直接搬用分类 Accuracy）
+                    </div>
+                </label>
+
+                <label class="flex items-start gap-3 p-3 rounded-xl border border-slate-200 hover:bg-slate-50 transition cursor-pointer text-xs sm:text-sm">
+                    <input type="checkbox" onchange="updateProgress()" class="mt-1 rounded text-blue-600 focus:ring-blue-500 w-4 h-4">
+                    <div>
+                        <strong class="text-slate-900">2. 解耦设计：</strong> Dataset（客观事实，如风险等级）与 Evaluation Policy（企业容忍门槛）是否完全解耦？
+                    </div>
+                </label>
+
+                <label class="flex items-start gap-3 p-3 rounded-xl border border-slate-200 hover:bg-slate-50 transition cursor-pointer text-xs sm:text-sm">
+                    <input type="checkbox" onchange="updateProgress()" class="mt-1 rounded text-blue-600 focus:ring-blue-500 w-4 h-4">
+                    <div>
+                        <strong class="text-slate-900">3. 极简 Release Gate：</strong> 上线硬门槛指标是否控制在 3-4 个以内，且每个指标回答一个明确的业务损失问题？
+                    </div>
+                </label>
+
+                <label class="flex items-start gap-3 p-3 rounded-xl border border-slate-200 hover:bg-slate-50 transition cursor-pointer text-xs sm:text-sm">
+                    <input type="checkbox" onchange="updateProgress()" class="mt-1 rounded text-blue-600 focus:ring-blue-500 w-4 h-4">
+                    <div>
+                        <strong class="text-slate-900">4. 诊断分层：</strong> 是否将分类准确率等模型性能指标降级为 Diagnostic Metrics（诊断看板），不阻塞上线？
+                    </div>
+                </label>
+
+                <label class="flex items-start gap-3 p-3 rounded-xl border border-slate-200 hover:bg-slate-50 transition cursor-pointer text-xs sm:text-sm">
+                    <input type="checkbox" onchange="updateProgress()" class="mt-1 rounded text-blue-600 focus:ring-blue-500 w-4 h-4">
+                    <div>
+                        <strong class="text-slate-900">5. 专家高效协同：</strong> 人类专家精力是否集中于 Benchmark 建设和失败案例复核，而非参与日常全量人工打分？
+                    </div>
+                </label>
+
+                <label class="flex items-start gap-3 p-3 rounded-xl border border-slate-200 hover:bg-slate-50 transition cursor-pointer text-xs sm:text-sm">
+                    <input type="checkbox" onchange="updateProgress()" class="mt-1 rounded text-blue-600 focus:ring-blue-500 w-4 h-4">
+                    <div>
+                        <strong class="text-slate-900">6. 拓扑覆盖：</strong> Benchmark 测试集是否基于风险拓扑（Taxonomy）人为构造以保证覆盖度，而不是消极等待生产环境日志？
+                    </div>
+                </label>
+
+                <label class="flex items-start gap-3 p-3 rounded-xl border border-slate-200 hover:bg-slate-50 transition cursor-pointer text-xs sm:text-sm">
+                    <input type="checkbox" onchange="updateProgress()" class="mt-1 rounded text-blue-600 focus:ring-blue-500 w-4 h-4">
+                    <div>
+                        <strong class="text-slate-900">7. 动态闭环：</strong> 是否具备把线下线上发现的 Failure Cases 吸收回 Benchmark 的持续更新机制？
+                    </div>
+                </label>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-16 text-center text-xs text-slate-500 pb-8">
+        <p>Medical CRM Compliance Checker Eval · 学习报告与方法论沉淀</p>
+    </footer>
+
+    <script>
+        function updateProgress() {
+            const checkboxes = document.querySelectorAll('#checklistContainer input[type="checkbox"]');
+            const checked = document.querySelectorAll('#checklistContainer input[type="checkbox"]:checked');
+            const total = checkboxes.length;
+            const count = checked.length;
+            
+            document.getElementById('progressText').innerText = `${count} / ${total}`;
+            const percentage = (count / total) * 100;
+            document.getElementById('progressBar').style.width = `${percentage}%`;
+        }
+    </script>
+</body>
+</html>

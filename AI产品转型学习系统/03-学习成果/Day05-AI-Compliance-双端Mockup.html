@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>医药代表拜访报告 AI 合规检测双端仿真 Mockup</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+                    colors: {
+                        brand: { 50: '#f0f9ff', 100: '#e0f2fe', 500: '#0284c7', 600: '#0369a1', 700: '#075985' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbar styling */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        /* Mobile phone mockup styling */
+        .phone-container {
+            width: 380px;
+            height: 780px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 12px #1e293b;
+            border-radius: 44px;
+        }
+
+        /* Pulse animation for intercepted record */
+        @keyframes flashRow {
+            0% { background-color: #ffe4e6; }
+            100% { background-color: transparent; }
+        }
+        .animate-new-row {
+            animation: flashRow 2.5s ease-out;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen font-sans flex flex-col">
+
+    <!-- Top System Navigation Header -->
+    <header class="bg-slate-900 text-white px-6 py-3 flex items-center justify-between border-b border-slate-800 shrink-0">
+        <div class="flex items-center space-x-3">
+            <div class="bg-blue-600 text-white p-2 rounded-lg flex items-center justify-center font-bold text-lg">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <div>
+                <h1 class="text-base font-bold tracking-wide">医药代表拜访报告 AI 实时合规监测与拦截系统</h1>
+                <p class="text-xs text-slate-400">仿真测试平台 ( Left: 移动应用端 | Right: 合规监控工作台 )</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-3">
+            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                <span class="w-1.5 h-1.5 mr-1.5 bg-emerald-400 rounded-full animate-pulse"></span>
+                AI 检测引擎：运行中 (v3.2)
+            </span>
+            <button onclick="openInNewTab()" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-xs font-medium text-white rounded-md transition border border-blue-500 flex items-center gap-1.5 shadow-sm">
+                <i class="fa-solid fa-up-right-from-square"></i> 新标签页打开
+            </button>
+            <button onclick="resetData()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-200 rounded-md transition border border-slate-700 flex items-center gap-1.5">
+                <i class="fa-solid fa-rotate-right"></i> 重置数据
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Dual-View Workspace -->
+    <main class="flex-1 p-6 flex gap-6 overflow-hidden max-w-[1920px] mx-auto w-full">
+        
+        <!-- LEFT: Mobile View Simulator (Pharma Rep Endpoint) -->
+        <section class="shrink-0 flex flex-col items-center">
+            <div class="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 flex items-center gap-2">
+                <i class="fa-solid fa-mobile-screen"></i> 医药代表端 (移动 App 模拟)
+            </div>
+
+            <!-- Phone Frame -->
+            <div class="phone-container bg-slate-50 flex flex-col relative overflow-hidden border-4 border-slate-700">
+                <!-- Phone Status Bar -->
+                <div class="bg-white px-6 pt-3 pb-2 flex justify-between items-center text-xs text-slate-800 shrink-0 select-none">
+                    <span class="font-semibold">09:41</span>
+                    <!-- Dynamic Island Notch -->
+                    <div class="w-24 h-4 bg-black rounded-full"></div>
+                    <div class="flex items-center space-x-1.5 text-slate-600">
+                        <i class="fa-solid fa-signal text-[10px]"></i>
+                        <i class="fa-solid fa-wifi text-[10px]"></i>
+                        <i class="fa-solid fa-battery-full text-[12px]"></i>
+                    </div>
+                </div>
+
+                <!-- App Header -->
+                <div class="bg-white px-4 py-3 border-b border-slate-200 flex items-center justify-between shrink-0">
+                    <div class="flex items-center space-x-2">
+                        <i class="fa-solid fa-chevron-left text-slate-500 text-sm"></i>
+                        <span class="font-bold text-slate-800 text-base">填写拜访报告</span>
+                    </div>
+                    <span class="text-xs text-brand-600 bg-brand-50 px-2 py-0.5 rounded font-medium">草稿自动保存</span>
+                </div>
+
+                <!-- App Form Content (Scrollable) -->
+                <div class="flex-1 overflow-y-auto p-4 space-y-4 text-xs">
+                    
+                    <!-- Dropdown Fields (Rule specified: Dropdowns for these fields) -->
+                    <form id="visitForm" onsubmit="handleFormSubmit(event)" class="space-y-3.5">
+                        
+                        <!-- Doctor Select -->
+                        <div>
+                            <label class="block font-semibold text-slate-700 mb-1">拜访医生 <span class="text-rose-500">*</span></label>
+                            <select id="doctorSelect" class="w-full bg-white border border-slate-300 rounded-lg p-2 text-slate-800 focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                                <option value="张伟 (心内科主任 - 第一人民医院)">张伟 (心内科主任 - 第一人民医院)</option>
+                                <option value="王芳 (呼吸科副主任 - 华山医院)">王芳 (呼吸科副主任 - 华山医院)</option>
+                                <option value="李强 (肿瘤科专家 - 肿瘤专科医院)">李强 (肿瘤科专家 - 肿瘤专科医院)</option>
+                                <option value="赵敏 (内分泌科医师 - 协和医院)">赵敏 (内分泌科医师 - 协和医院)</option>
+                            </select>
+                        </div>
+
+                        <!-- Date/Time Select -->
+                        <div>
+                            <label class="block font-semibold text-slate-700 mb-1">拜访时间 <span class="text-rose-500">*</span></label>
+                            <select id="timeSelect" class="w-full bg-white border border-slate-300 rounded-lg p-2 text-slate-800 focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                                <option value="2026-08-05 10:30">2026-08-05 10:30 (今天 上午)</option>
+                                <option value="2026-08-05 14:15">2026-08-05 14:15 (今天 下午)</option>
+                                <option value="2026-08-04 16:00">2026-08-04 16:00 (昨天)</option>
+                            </select>
+                        </div>
+
+                        <!-- Purpose Select -->
+                        <div>
+                            <label class="block font-semibold text-slate-700 mb-1">拜访目的 <span class="text-rose-500">*</span></label>
+                            <select id="purposeSelect" class="w-full bg-white border border-slate-300 rounded-lg p-2 text-slate-800 focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                                <option value="学术拜访与产品研讨">学术拜访与产品研讨</option>
+                                <option value="科室会议宣讲沟通">科室会议宣讲沟通</option>
+                                <option value="不良反应常规收集反馈">不良反应常规收集反馈</option>
+                                <option value="新药进院资料递交">新药进院资料递交</option>
+                            </select>
+                        </div>
+
+                        <!-- Product Select -->
+                        <div>
+                            <label class="block font-semibold text-slate-700 mb-1">拜访产品 <span class="text-rose-500">*</span></label>
+                            <select id="productSelect" class="w-full bg-white border border-slate-300 rounded-lg p-2 text-slate-800 focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                                <option value="泰宁平 (注射用盐酸吉西他滨)">泰宁平 (注射用盐酸吉西他滨)</option>
+                                <option value="诺欣妥 (沙库巴曲缬沙坦钠片)">诺欣妥 (沙库巴曲缬沙坦钠片)</option>
+                                <option value="安维汀 (贝伐珠单抗注射液)">安维汀 (贝伐珠单抗注射液)</option>
+                            </select>
+                        </div>
+
+                        <!-- Freetext Field (Grey-zone compliance test case) -->
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="font-semibold text-slate-700">拜访说明 (FreeText) <span class="text-rose-500">*</span></label>
+                                <span class="text-[10px] text-rose-600 font-bold flex items-center gap-1">
+                                    <i class="fa-solid fa-triangle-exclamation animate-pulse"></i> AI 强行拦截
+                                </span>
+                            </div>
+                            <textarea id="detailsText" rows="5" oninput="runAiCheck()" placeholder="请如实填写拜访详细内容..." class="w-full border-2 border-rose-500 bg-rose-50/20 rounded-lg p-2.5 text-slate-800 focus:ring-2 focus:ring-rose-500 focus:outline-none resize-none transition font-medium">拜访张主任沟通新药临床反馈。主任提及近期计划参加华东学术研讨会，已承诺为其及同行家属安排高规格往返机票与五星级酒店住宿，并按顶格标准发放讲课劳务费2万元。主任表示下月起将在科室优先推荐并增加本品处方量。</textarea>
+                        </div>
+
+                        <!-- Red Interception Banner & Triggered Rules Guidance -->
+                        <div id="aiAnalysisBox" class="bg-rose-50 border-2 border-rose-500 text-rose-900 p-3.5 rounded-xl transition-all shadow-sm space-y-2.5">
+                            <div class="flex items-center justify-between border-b border-rose-200 pb-2">
+                                <span class="font-bold flex items-center gap-1.5 text-rose-700 text-xs">
+                                    <i class="fa-solid fa-circle-xmark text-rose-600 text-sm"></i> 提交失败：AI 合规审查拦截
+                                </span>
+                            </div>
+                            
+                            <div class="text-[12px] leading-relaxed">
+                                <span class="font-bold text-rose-800">触发合规规则：</span>
+                                <span id="matchedRuleMobile" class="text-rose-700 font-semibold">[R-105] 灰色利益输送与不当学术赞助风险</span>
+                            </div>
+
+                            <div class="text-[11px] font-medium text-rose-600 flex items-center gap-1.5 pt-1 border-t border-rose-200/60">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                                <span>系统提示：拜访说明未通过合规审查，请修改后重新提交。</span>
+                            </div>
+                        </div>
+
+                        <!-- Blocked Submit Button -->
+                        <button id="submitBtn" type="submit" disabled class="w-full bg-slate-400 text-white font-bold py-3 px-4 rounded-xl shadow cursor-not-allowed transition flex items-center justify-center space-x-2">
+                            <i class="fa-solid fa-ban"></i>
+                            <span>报告已被拦截 (请修改后提交)</span>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Phone Bottom Bar -->
+                <div class="bg-white border-t border-slate-200 py-2.5 px-6 flex justify-around text-slate-400 text-xs shrink-0">
+                    <div class="text-brand-600 flex flex-col items-center">
+                        <i class="fa-solid fa-file-pen text-base"></i>
+                        <span class="text-[10px] mt-0.5">报告填写</span>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <i class="fa-solid fa-clock-rotate-left text-base"></i>
+                        <span class="text-[10px] mt-0.5">历史提交</span>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <i class="fa-solid fa-user text-base"></i>
+                        <span class="text-[10px] mt-0.5">个人中心</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- RIGHT: PC View Simulator (Compliance Admin Workbench) -->
+        <section class="flex-1 flex flex-col bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden min-w-0">
+            
+            <!-- Workbench Header -->
+            <div class="bg-slate-50 border-b border-slate-200 px-6 py-4 flex justify-between items-center shrink-0">
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h2 class="text-lg font-bold text-slate-800">合规审计管理工作台</h2>
+                        <span class="bg-rose-100 text-rose-700 text-xs px-2.5 py-0.5 rounded-full font-semibold border border-rose-200 flex items-center gap-1">
+                            <i class="fa-solid fa-bell"></i> 实时预警监控中
+                        </span>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-0.5">监控全公司医药代表拜访报告违规记录，接收 AI 拦截触发的违规事件</p>
+                </div>
+                
+                <!-- System Stats Bar -->
+                <div class="flex items-center space-x-4">
+                    <div class="bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm text-center">
+                        <div class="text-[10px] text-slate-400 font-medium">今日 AI 拦截总数</div>
+                        <div id="statTotal" class="text-base font-bold text-slate-800">3 次</div>
+                    </div>
+                    <div class="bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm text-center">
+                        <div class="text-[10px] text-slate-400 font-medium">高风险预警</div>
+                        <div id="statHighRisk" class="text-base font-bold text-rose-600">2 件</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Controls & Filter Toolbar -->
+            <div class="p-4 bg-white border-b border-slate-100 flex justify-between items-center gap-4 text-xs shrink-0">
+                <div class="flex items-center space-x-3 flex-1 max-w-md">
+                    <div class="relative w-full">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400"></i>
+                        <input type="text" placeholder="搜索报告单号、代表姓名、医生、关键词..." class="w-full bg-slate-50 border border-slate-200 rounded-lg pl-9 pr-3 py-1.5 text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500">
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <select class="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-700 focus:outline-none">
+                        <option>风险等级：全部</option>
+                        <option>高风险</option>
+                        <option>中风险</option>
+                        <option>低风险</option>
+                    </select>
+                    <select class="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-700 focus:outline-none">
+                        <option>处理状态：全部</option>
+                        <option>待约谈</option>
+                        <option>已拦截</option>
+                        <option>已驳回</option>
+                    </select>
+                    <button class="bg-slate-800 text-white px-3 py-1.5 rounded-lg hover:bg-slate-700 font-medium transition flex items-center gap-1">
+                        <i class="fa-solid fa-download"></i> 导出审计日志
+                    </button>
+                </div>
+            </div>
+
+            <!-- Table Section containing Mock Data + Newly Intercepted Data -->
+            <div class="flex-1 overflow-auto p-4">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50 text-slate-500 font-semibold text-xs border-b border-slate-200">
+                            <th class="p-3">拦截时间 / 拜访单号</th>
+                            <th class="p-3">医药代表</th>
+                            <th class="p-3">受访医生 & 医院</th>
+                            <th class="p-3">违规字段</th>
+                            <th class="p-3 w-2/5">字段详细内容 (医药代表填写)</th>
+                            <th class="p-3">命中规则</th>
+                            <th class="p-3">风险等级</th>
+                            <th class="p-3 text-right">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="auditTableBody" class="divide-y divide-slate-100 text-xs">
+                        <!-- Dynamic content populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Workbench Footer -->
+            <div class="bg-slate-50 border-t border-slate-200 px-6 py-3 flex justify-between items-center text-xs text-slate-500 shrink-0">
+                <span>显示 1 - <span id="recordCount">3</span> 条合规预警记录</span>
+                <div class="flex items-center space-x-1">
+                    <button class="px-2.5 py-1 border border-slate-200 rounded bg-white hover:bg-slate-100 text-slate-600 disabled:opacity-50">上一页</button>
+                    <span class="px-3 py-1 bg-brand-600 text-white font-bold rounded">1</span>
+                    <button class="px-2.5 py-1 border border-slate-200 rounded bg-white hover:bg-slate-100 text-slate-600 disabled:opacity-50">下一页</button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Detail Modal Drawer for PC Admin -->
+    <div id="detailModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex justify-end">
+        <div class="bg-white w-full max-w-xl h-full shadow-2xl flex flex-col p-6 overflow-y-auto animate-in slide-in-from-right duration-200">
+            <div class="flex justify-between items-center border-b border-slate-200 pb-4 mb-4">
+                <div>
+                    <h3 class="text-base font-bold text-slate-800">拜访报告违规审计详情</h3>
+                    <p class="text-xs text-slate-400 mt-0.5" id="modalReportId">单号：REP-20260805-9901</p>
+                </div>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 text-lg">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div id="modalContent" class="space-y-4 text-xs">
+                <!-- Injected dynamically -->
+            </div>
+
+            <div class="mt-auto border-t border-slate-200 pt-4 flex justify-end space-x-2">
+                <button onclick="closeModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-lg">关闭</button>
+                <button onclick="alert('已向该代表发送合规约谈警示函！')" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-medium rounded-lg shadow">下发合规约谈单</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Compliance Rules Engine Database (Updated with Grey-Zone Bribery Rules)
+        const COMPLIANCE_RULES = [
+            {
+                id: 'R-105',
+                keywords: ['家属', '机票', '酒店住宿', '顶格', '讲课费', '劳务费', '优先推荐', '处方量', '赞助'],
+                name: '灰色利益输送/变相学术赞助风险',
+                risk: '高风险',
+                levelClass: 'bg-rose-100 text-rose-700 border-rose-200',
+                description: '严禁提供非学术目的家属随行赞助、高于标准的劳务报酬或将赞助与处方量绑定。'
+            },
+            {
+                id: 'R-101',
+                keywords: ['购物卡', '现金', '回扣', '礼品', '报销', '加油卡', '私下转账'],
+                name: '直接利益输送/商业贿赂风险',
+                risk: '高风险',
+                levelClass: 'bg-rose-100 text-rose-700 border-rose-200',
+                description: '严禁向医疗卫生人员提供任何形式的现金、礼品或购物卡。'
+            },
+            {
+                id: 'R-204',
+                keywords: ['100%安全', '包治', '未获批', '超说明书', '根治', '无副作用'],
+                name: '夸大疗效/超适应症宣讲',
+                risk: '高风险',
+                levelClass: 'bg-rose-100 text-rose-700 border-rose-200',
+                description: '禁止对药品疗效做绝对化承诺，严禁超说明书范围进行临床宣讲。'
+            },
+            {
+                id: 'R-302',
+                keywords: ['豪华大餐', '高尔夫', '娱乐活动', 'KTV', '私人送礼'],
+                name: '不当娱乐招待风险',
+                risk: '中风险',
+                levelClass: 'bg-amber-100 text-amber-700 border-amber-200',
+                description: '学术活动餐饮需符合人均标准，不得组织高消费娱乐活动。'
+            }
+        ];
+
+        // Initial PC Mock Data Records
+        let mockRecords = [
+            {
+                id: 'REP-20260805-0988',
+                time: '2026-08-05 10:30:12',
+                repName: '王伟 (当前登录代表-华东区)',
+                doctor: '张伟 (心内科主任 - 第一人民医院)',
+                fieldName: '拜访说明',
+                rawContent: '拜访张主任沟通新药临床反馈。主任提及近期计划参加华东学术研讨会，已承诺为其及同行家属安排高规格往返机票与五星级酒店住宿，并按顶格标准发放讲课劳务费2万元。主任表示下月起将在科室优先推荐并增加本品处方量。',
+                matchedRule: '灰色利益输送与不当学术赞助风险 (R-105)',
+                riskLevel: '高风险',
+                riskBadge: 'bg-rose-100 text-rose-700 border-rose-200',
+                status: '已阻断拦截'
+            },
+            {
+                id: 'REP-20260805-0715',
+                time: '2026-08-05 09:15:43',
+                repName: '李娜 (华北大区-销售一部)',
+                doctor: '王芳 (呼吸科副主任 - 华山医院)',
+                fieldName: '拜访说明',
+                rawContent: '拜访王主任，重点向其宣讲了产品在儿科患者中的特殊疗效，承诺该药100%安全且无副作用（注：该适应症尚属未获批阶段）。',
+                matchedRule: '夸大疗效/超适应症宣讲 (R-204)',
+                riskLevel: '高风险',
+                riskBadge: 'bg-rose-100 text-rose-700 border-rose-200',
+                status: '已阻断拦截'
+            },
+            {
+                id: 'REP-20260804-0931',
+                time: '2026-08-04 16:45:10',
+                repName: '赵强 (华南大区-销售三部)',
+                doctor: '李强 (肿瘤科专家 - 肿瘤专科医院)',
+                fieldName: '拜访说明',
+                rawContent: '学术研讨会后邀请李主任及科室成员共进豪华大餐并安排了高尔夫娱乐活动，顺便沟通了下一季度的用药计划。',
+                matchedRule: '不当娱乐招待风险 (R-302)',
+                riskLevel: '中风险',
+                riskBadge: 'bg-amber-100 text-amber-700 border-amber-200',
+                status: '已阻断拦截'
+            }
+        ];
+
+        window.onload = function() {
+            renderTable();
+            runAiCheck();
+        };
+
+        // Render PC Table records
+        function renderTable() {
+            const tbody = document.getElementById('auditTableBody');
+            tbody.innerHTML = '';
+
+            mockRecords.forEach((record, index) => {
+                const tr = document.createElement('tr');
+                tr.className = `hover:bg-slate-50 transition border-b border-slate-100 ${index === 0 && record.isNew ? 'animate-new-row' : ''}`;
+
+                tr.innerHTML = `
+                    <td class="p-3">
+                        <div class="font-semibold text-slate-800">${record.time}</div>
+                        <div class="text-[10px] text-slate-400 font-mono">${record.id}</div>
+                    </td>
+                    <td class="p-3 font-medium text-slate-700">${record.repName}</td>
+                    <td class="p-3 text-slate-600">${record.doctor}</td>
+                    <td class="p-3">
+                        <span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-[11px] font-mono border border-slate-200">
+                            ${record.fieldName}
+                        </span>
+                    </td>
+                    <td class="p-3 leading-relaxed text-slate-700">
+                        <div class="line-clamp-2 max-w-lg">${record.rawContent}</div>
+                    </td>
+                    <td class="p-3">
+                        <span class="text-rose-600 font-medium">${record.matchedRule}</span>
+                    </td>
+                    <td class="p-3">
+                        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold border ${record.riskBadge}">
+                            ${record.riskLevel}
+                        </span>
+                    </td>
+                    <td class="p-3 text-right">
+                        <button onclick="openModal('${record.id}')" class="text-brand-600 hover:text-brand-800 font-semibold text-xs hover:underline">
+                            审计详情
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('recordCount').innerText = mockRecords.length;
+            document.getElementById('statTotal').innerText = mockRecords.length + ' 次';
+            
+            const highRiskCount = mockRecords.filter(r => r.riskLevel === '高风险').length;
+            document.getElementById('statHighRisk').innerText = highRiskCount + ' 件';
+        }
+
+        // Check input text against compliance rules
+        function checkTextCompliance(text) {
+            let matched = null;
+            let foundKeywords = [];
+
+            for (let rule of COMPLIANCE_RULES) {
+                for (let kw of rule.keywords) {
+                    if (text.includes(kw)) {
+                        foundKeywords.push(kw);
+                        if (!matched) matched = rule;
+                    }
+                }
+            }
+
+            return { matchedRule: matched, keywords: foundKeywords };
+        }
+
+        // Helper to format text (returns direct raw text without keyword highlighting)
+        function highlightKeywords(text) {
+            return text;
+        }
+
+        // Real-time AI scanner triggered on keyup/input in mobile free-text box
+        function runAiCheck() {
+            const text = document.getElementById('detailsText').value;
+            const textarea = document.getElementById('detailsText');
+            const analysisBox = document.getElementById('aiAnalysisBox');
+            const submitBtn = document.getElementById('submitBtn');
+            const matchedRuleMobile = document.getElementById('matchedRuleMobile');
+
+            if (!text.trim()) {
+                analysisBox.classList.add('hidden');
+                textarea.className = "w-full border border-slate-300 rounded-lg p-2.5 text-slate-800 focus:ring-2 focus:ring-brand-500 focus:outline-none resize-none transition";
+                submitBtn.disabled = false;
+                submitBtn.className = 'w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-3 px-4 rounded-xl shadow transition flex items-center justify-center space-x-2';
+                submitBtn.innerHTML = '<span>提交拜访报告</span> <i class="fa-solid fa-paper-plane text-xs"></i>';
+                return;
+            }
+
+            const { matchedRule } = checkTextCompliance(text);
+
+            if (matchedRule) {
+                // Show Red AI Analysis Box & Highlight input border
+                analysisBox.classList.remove('hidden');
+                textarea.className = "w-full border-2 border-rose-500 bg-rose-50/20 rounded-lg p-2.5 text-slate-800 focus:ring-2 focus:ring-rose-500 focus:outline-none resize-none transition font-medium";
+                matchedRuleMobile.innerText = `[${matchedRule.id}] ${matchedRule.name}`;
+
+                // Disable submit button
+                submitBtn.disabled = true;
+                submitBtn.className = 'w-full bg-slate-400 text-white font-bold py-3 px-4 rounded-xl shadow cursor-not-allowed transition flex items-center justify-center space-x-2';
+                submitBtn.innerHTML = '<i class="fa-solid fa-ban"></i> <span>报告已被拦截 (请修改后提交)</span>';
+            } else {
+                // Clean & Safe text
+                analysisBox.classList.add('hidden');
+                textarea.className = "w-full border border-emerald-500 bg-emerald-50/20 rounded-lg p-2.5 text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none resize-none transition";
+                submitBtn.disabled = false;
+                submitBtn.className = 'w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-3 px-4 rounded-xl shadow transition flex items-center justify-center space-x-2';
+                submitBtn.innerHTML = '<span>提交拜访报告</span> <i class="fa-solid fa-paper-plane text-xs"></i>';
+            }
+        }
+
+        // Mobile form submission interceptor
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            const text = document.getElementById('detailsText').value;
+            const { matchedRule } = checkTextCompliance(text);
+
+            if (matchedRule) {
+                alert('🚨 提交已被系统强制阻拦！拜访说明未能通过【' + matchedRule.name + '】合规审查，请修改后重新提交。');
+            } else {
+                alert('✅ 拜访报告提交成功！文本合规性检测通过。');
+                document.getElementById('detailsText').value = '';
+                runAiCheck();
+            }
+        }
+
+        // Open Detail Modal on PC side
+        function openModal(id) {
+            const record = mockRecords.find(r => r.id === id);
+            if (!record) return;
+
+            document.getElementById('modalReportId').innerText = `报告单号：${record.id} | 拦截时间：${record.time}`;
+            
+            const modalContent = document.getElementById('modalContent');
+            modalContent.innerHTML = `
+                <div class="bg-rose-50 border border-rose-200 p-3 rounded-lg flex justify-between items-center">
+                    <div>
+                        <div class="text-rose-800 font-bold">违规状态：${record.status}</div>
+                        <div class="text-rose-600 mt-0.5">命中规则：${record.matchedRule}</div>
+                    </div>
+                    <span class="px-3 py-1 rounded-full text-xs font-bold ${record.riskBadge}">${record.riskLevel}</span>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 bg-slate-50 p-3 rounded-lg border border-slate-200">
+                    <div><span class="text-slate-400">医药代表：</span> <span class="font-semibold text-slate-700">${record.repName}</span></div>
+                    <div><span class="text-slate-400">受访医生：</span> <span class="font-semibold text-slate-700">${record.doctor}</span></div>
+                </div>
+
+                <div class="space-y-1">
+                    <div class="font-semibold text-slate-700">违规字段名称：</div>
+                    <div class="bg-slate-100 px-2.5 py-1 rounded text-slate-800 font-mono inline-block">${record.fieldName}</div>
+                </div>
+
+                <div class="space-y-1">
+                    <div class="font-semibold text-slate-700">医药代表填写详细内容：</div>
+                    <div class="p-3 bg-slate-900 text-slate-100 rounded-lg font-sans leading-relaxed text-xs border border-slate-700">
+                        ${record.rawContent}
+                    </div>
+                </div>
+
+                <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-1">
+                    <div class="font-semibold text-slate-700">AI 合规审查处置建议：</div>
+                    <p class="text-slate-600">该记录违规事实明确，建议驳回该份拜访报告，并在系统内扣除代表本月合规积分，下发《医药代表合规问询约谈单》。</p>
+                </div>
+            `;
+
+            document.getElementById('detailModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('detailModal').classList.add('hidden');
+        }
+
+        function resetData() {
+            location.reload();
+        }
+
+        // 独立在新标签页中打开当前 Web 页面
+        function openInNewTab() {
+            const htmlContent = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+            const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+            const blobUrl = URL.createObjectURL(blob);
+            window.open(blobUrl, '_blank');
+        }
+    </script>
+</body>
+</html>

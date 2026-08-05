@@ -79,6 +79,7 @@
 - Day03：补充了一份更适合浏览与展示的可视化 HTML 版本，见 [Day03-AI-Compliance-Eval-设计学习报告-可视化版.html](./03-学习成果/Day03-AI-Compliance-Eval-设计学习报告-可视化版.html)
 - Day04：完成对 eval 方案的产品化复盘，确认高危/中低危指标差异、MVP 阶段 case 收敛策略，并沉淀 HTML 版评估方案，见 [crm-compliance-checker-eval-v1.html](./03-学习成果/crm-compliance-checker-eval-v1.html)
 - Day05：设计并写出了最小可运行 demo（正则+LLM混合架构），代码已在沙盒实测regex部分，见 [demo/README.md](./03-学习成果/demo/README.md)
+- Day05：补充完成产品侧成果，明确双端结构、核心审核字段、最小规则配置字段，并归档双端 mock，见 [Day05-双端Mock与规则配置复盘.md](./03-学习成果/Day05-双端Mock与规则配置复盘.md) 与 [Day05-AI-Compliance-双端Mockup.html](./03-学习成果/Day05-AI-Compliance-双端Mockup.html)
 
 当前下一步：
 - Day06：设置真实 API key 跑通完整pipeline，记录基线分数，完成第一轮评测驱动迭代；随后按压缩排期推进：竞品/行业调研 → 面试 README + 讲稿
@@ -95,6 +96,9 @@
 - [02-学习计划/00-统一学习计划.md](file:///Users/li/ai%20pm%20learning/claude-cowork-pm-guide/AI产品转型学习系统/02-学习计划/00-统一学习计划.md)
 - [03-学习成果/Day01-学习卡.md](file:///Users/li/ai%20pm%20learning/claude-cowork-pm-guide/AI产品转型学习系统/03-学习成果/Day01-学习卡.md)
 - [03-学习成果/Day04-学习卡.md](file:///Users/li/ai%20pm%20learning/claude-cowork-pm-guide/AI产品转型学习系统/03-学习成果/Day04-学习卡.md)
+- [03-学习成果/Day05-学习卡.md](file:///Users/li/ai%20pm%20learning/claude-cowork-pm-guide/AI产品转型学习系统/03-学习成果/Day05-学习卡.md)
+- [03-学习成果/Day05-双端Mock与规则配置复盘.md](file:///Users/li/ai%20pm%20learning/claude-cowork-pm-guide/AI产品转型学习系统/03-学习成果/Day05-双端Mock与规则配置复盘.md)
+- [03-学习成果/Day05-AI-Compliance-双端Mockup.html](file:///Users/li/ai%20pm%20learning/claude-cowork-pm-guide/AI产品转型学习系统/03-学习成果/Day05-AI-Compliance-双端Mockup.html)
 - [03-学习成果/crm-compliance-checker-eval-v1.html](file:///Users/li/ai%20pm%20learning/claude-cowork-pm-guide/AI产品转型学习系统/03-学习成果/crm-compliance-checker-eval-v1.html)
 
 同时可参考仓库根目录中的历史文件：
