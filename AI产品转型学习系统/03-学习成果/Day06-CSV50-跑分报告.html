@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Day06 CSV50 跑分报告</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f7f8fb;
+      color: #1f2937;
+      margin: 0;
+      padding: 24px;
+      line-height: 1.6;
+    }
+    .wrap {
+      max-width: 1080px;
+      margin: 0 auto;
+    }
+    .card {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: 0 6px 20px rgba(15, 23, 42, 0.04);
+    }
+    h1, h2, h3 {
+      margin: 0 0 12px;
+    }
+    h1 {
+      font-size: 28px;
+    }
+    h2 {
+      font-size: 20px;
+    }
+    .sub {
+      color: #6b7280;
+      margin-bottom: 18px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+    }
+    .metric {
+      background: #fbfdff;
+      border: 1px solid #e5e7eb;
+      border-radius: 14px;
+      padding: 16px;
+    }
+    .label {
+      font-size: 13px;
+      color: #6b7280;
+      margin-bottom: 8px;
+    }
+    .value {
+      font-size: 28px;
+      font-weight: 700;
+    }
+    .good {
+      color: #047857;
+    }
+    .warn {
+      color: #b45309;
+    }
+    .bad {
+      color: #b91c1c;
+    }
+    .pill {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      background: #eff6ff;
+      color: #1d4ed8;
+    }
+    .pill.bad {
+      background: #fef2f2;
+      color: #b91c1c;
+    }
+    .pill.warn {
+      background: #fff7ed;
+      color: #c2410c;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px;
+    }
+    th, td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #e5e7eb;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background: #f8fafc;
+      font-size: 13px;
+      color: #475569;
+    }
+    ul {
+      margin: 8px 0 0 18px;
+      padding: 0;
+    }
+    code {
+      background: #f3f4f6;
+      padding: 2px 6px;
+      border-radius: 6px;
+    }
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .step {
+      border: 1px solid #e5e7eb;
+      background: #fbfdff;
+      border-radius: 14px;
+      padding: 14px;
+    }
+    .step-num {
+      font-size: 12px;
+      color: #6b7280;
+      margin-bottom: 6px;
+    }
+    .muted {
+      color: #6b7280;
+    }
+    a {
+      color: #2563eb;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>Day06 CSV50 跑分报告</h1>
+      <div class="sub">这次不是 demo 子集评测，而是拿完整 10 类、50 条 CSV benchmark 去压当前 MVP demo。</div>
+      <div class="grid">
+        <div class="metric">
+          <div class="label">模型</div>
+          <div class="value">DeepSeek</div>
+          <div><code>deepseek-v4-flash</code></div>
+        </div>
+        <div class="metric">
+          <div class="label">本次使用的 evals</div>
+          <div class="value">CSV 50</div>
+          <div><code>medical_crm_compliance_eval_dataset_cn.csv</code></div>
+        </div>
+        <div class="metric">
+          <div class="label">当前 demo 实现范围</div>
+          <div class="value">4 类</div>
+          <div><code>01 / 05 / 07 / 10</code></div>
+        </div>
+        <div class="metric">
+          <div class="label">完整框架范围</div>
+          <div class="value">10 类</div>
+          <div><code>01 ~ 10</code></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>1. 当前系统里到底配了什么规则</h2>
+      <div class="sub">这里需要分清 3 层：固定 system prompt、用户可编辑规则、系统内部实现。当前报告只看“全貌”时，建议先从这 3 份文件入手。</div>
+      <ul>
+        <li>固定 system prompt：
+          <a href="./Day06-System-Prompt-固定模板.md">Day06-System-Prompt-固定模板.md</a>
+        </li>
+        <li>用户可编辑规则配置：
+          <a href="./Day06-用户规则配置模板-v2.2.json">Day06-用户规则配置模板-v2.2.json</a>
+        </li>
+        <li>系统内部实现说明：
+          <a href="./Day06-内部实现说明-v1.md">Day06-内部实现说明-v1.md</a>
+        </li>
+      </ul>
+      <table>
+        <thead>
+          <tr>
+            <th>规则类别</th>
+            <th>当前是否已实现</th>
+            <th>动作</th>
+            <th>怎么配置</th>
+            <th>当前限制</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>01 商业贿赂与利益交换</td>
+            <td><span class="pill">已实现</span></td>
+            <td>Reject</td>
+            <td>规则说明 + 违规示例 + 边界示例，由 LLM 做语义判断</td>
+            <td>能抓对价关系，但还没单独拆“讲课费对价化”</td>
+          </tr>
+          <tr>
+            <td>05 患者隐私泄漏</td>
+            <td><span class="pill">已实现（部分）</span></td>
+            <td>Reject</td>
+            <td>用户规则里配置隐私规则；系统内部额外做结构化识别增强</td>
+            <td>主要覆盖结构化 PII，非结构化隐私能力不足</td>
+          </tr>
+          <tr>
+            <td>07 夸大疗效与绝对化宣讲</td>
+            <td><span class="pill">已实现</span></td>
+            <td>PassWithNotice</td>
+            <td>规则说明 + 违规示例 + 边界示例，由 LLM 做语义判断</td>
+            <td>会吸走一部分“未实现中危类”的 case</td>
+          </tr>
+          <tr>
+            <td>10 学术交流表述不严谨 / 完全合规</td>
+            <td><span class="pill">已实现</span></td>
+            <td>Pass</td>
+            <td>作为兜底 Pass 类，由 LLM 在不命中 01/05/07 时输出</td>
+            <td>有时会把未覆盖高危样本错误放行到这里</td>
+          </tr>
+          <tr>
+            <td>02 / 03 / 04 / 06 / 08 / 09</td>
+            <td><span class="pill bad">未实现</span></td>
+            <td>不稳定</td>
+            <td>只存在于完整 Eval 框架里，不在当前 demo 规则配置中</td>
+            <td>这正是本次 CSV50 跑分显著下滑的主要原因</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2>2. 一条真实 dataset 进来之后，系统会跑什么流程</h2>
+      <div class="sub">当前执行逻辑来自 <code>demo/checker.py</code>，但概念上已经拆成“固定框架 + 用户规则 + 内部增强”三层。</div>
+      <div class="flow">
+        <div class="step">
+          <div class="step-num">步骤 1</div>
+          <strong>读取输入文本</strong>
+          <div class="muted">从 CRM 拜访记录里拿到一条自由文本。</div>
+        </div>
+        <div class="step">
+          <div class="step-num">步骤 2</div>
+          <strong>先走系统内部结构化识别增强</strong>
+          <div class="muted">当前内部只对 05 做增强；如果命中身份证号、手机号、病案号等结构化 PII，直接判 05 / Reject。</div>
+        </div>
+        <div class="step">
+          <div class="step-num">步骤 3</div>
+          <strong>没命中正则，再走 LLM</strong>
+          <div class="muted">系统把“固定 system prompt + 当前启用的用户规则配置”一起发给 LLM。</div>
+        </div>
+        <div class="step">
+          <div class="step-num">步骤 4</div>
+          <strong>DeepSeek 返回 JSON</strong>
+          <div class="muted">期望返回 <code>matched_rule_id / risk_level / action / rationale</code>。</div>
+        </div>
+        <div class="step">
+          <div class="step-num">步骤 5</div>
+          <strong>和 golden label 对比</strong>
+          <div class="muted">由 runner 把实际结果和 dataset 里的预期分类、预期动作做对比。</div>
+        </div>
+        <div class="step">
+          <div class="step-num">步骤 6</div>
+          <strong>汇总成 metrics</strong>
+          <div class="muted">按 Release Gate 和 Diagnostic 两层输出结果。</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>3. 这次 evals 是怎么设计的，来源文件是什么</h2>
+      <ul>
+        <li>完整 benchmark 文件：<a href="file:///Users/li/ai%20pm%20learning/claude-cowork-pm-guide/medical_crm_compliance_eval_dataset_cn.csv">medical_crm_compliance_eval_dataset_cn.csv</a></li>
+        <li>它包含完整 10 类、50 条中文 benchmark case，是“完整产品框架”的测试集。</li>
+        <li>完整框架定义来源：
+          <a href="./CRM-Compliance-Eval框架说明.md">CRM-Compliance-Eval框架说明.md</a>
+          与
+          <a href="./CRM-Compliance-Eval-框架-v2.html">CRM-Compliance-Eval-框架-v2.html</a>
+        </li>
+        <li>当前 demo 子集评测文件是：
+          <a href="./demo/eval_cases.json">demo/eval_cases.json</a>
+        </li>
+        <li>所以你现在其实有两套 evals：
+          <ul>
+            <li>MVP 子集评测：回答“当前已实现范围内跑得怎样”</li>
+            <li>CSV50 完整评测：回答“当前 MVP 距离完整 10 类产品还差多少”</li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>4. 这次结果最重要的前提</h2>
+      <ul>
+        <li>这次评测不是“当前 demo 的最佳分数”，而是“当前 demo 在完整 10 类框架下的真实压力测试结果”。</li>
+        <li>因此它天然会暴露一个事实：当前 demo 只实现了 4 类能力，面对 02 / 03 / 04 / 06 / 08 / 09 这些未实现类别，成绩一定会显著下滑。</li>
+        <li>这不是坏事，反而能把“当前 MVP 的边界”讲清楚。</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>5. Metrics 来源</h2>
+      <ul>
+        <li>Release Gate 定义来源：
+          <a href="./CRM-Compliance-Eval框架说明.md">CRM-Compliance-Eval框架说明.md</a>
+          与
+          <a href="./CRM-Compliance-Eval-框架-v2.html">CRM-Compliance-Eval-框架-v2.html</a>
+        </li>
+        <li>其中明确给出了 3 个上线门槛：
+          <code>高危召回率 100%</code>、
+          <code>中危精准度 ≥ 90%</code>、
+          <code>低危误报率 ≤ 10%</code>
+        </li>
+        <li>Release Metrics 与 Diagnostic Metrics 的区分解释来源：
+          <a href="./Day03-AI-Compliance-Eval-设计学习报告.md">Day03-AI-Compliance-Eval-设计学习报告.md</a>
+          与
+          <a href="./Day03-AI-Compliance-Eval-设计学习报告-可视化版.html">可视化版</a>
+        </li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>6. 这次怎么解释这些 Metrics</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>指标</th>
+            <th>这次采用的解释口径</th>
+            <th>为什么这样算</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>高危类 Recall（01-05）</td>
+            <td>所有 Critical case 里，有多少最终仍然被系统识别成 <code>Critical</code></td>
+            <td>当前阶段先看高危有没有被抓住，不先被动作枚举绑定；这样更贴近现在的 MVP 评测重点。</td>
+          </tr>
+          <tr>
+            <td>中危类 Precision（06-09）</td>
+            <td>所有被系统识别成 <code>Medium</code> 的 case 中，有多少本来就真的是 Medium</td>
+            <td>当前阶段先看中危判断靠不靠谱，避免把未实现类别都压成一个“差不多的中危”。</td>
+          </tr>
+          <tr>
+            <td>低危误报率</td>
+            <td>所有 Low / 正常样本里，有多少没有被判成 <code>Low</code></td>
+            <td>这个指标反映正常内容有没有被误伤；当前我们先从风险等级层看，而不是从动作细节层看。</td>
+          </tr>
+          <tr>
+            <td>Diagnostic 指标</td>
+            <td><code>Overall Exact Action Accuracy</code>、<code>Overall Exact Category Accuracy</code> 等</td>
+            <td>这些更适合解释“错在哪”，而不是直接决定能不能上线。</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2>7. 跑出来结果怎么样</h2>
+      <div class="grid">
+        <div class="metric">
+          <div class="label">高危类 Recall（目标 100%）</div>
+          <div class="value bad">45%</div>
+          <div>10 / 22</div>
+          <div class="sub">未达标</div>
+        </div>
+        <div class="metric">
+          <div class="label">中危类 Precision（目标 ≥ 90%）</div>
+          <div class="value bad">77%</div>
+          <div>10 / 13</div>
+          <div class="sub">未达标</div>
+        </div>
+        <div class="metric">
+          <div class="label">低危误报率（目标 ≤ 10%）</div>
+          <div class="value ok">0%</div>
+          <div>0 / 9</div>
+          <div class="sub">当前达标</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>8. Diagnostic 结果</h2>
+      <div class="grid">
+        <div class="metric">
+          <div class="label">Overall Exact Action Accuracy</div>
+          <div class="value warn">58%</div>
+        </div>
+        <div class="metric">
+          <div class="label">Overall Exact Category Accuracy</div>
+          <div class="value warn">46%</div>
+        </div>
+        <div class="metric">
+          <div class="label">Critical Exact Category Recall</div>
+          <div class="value warn">41%</div>
+        </div>
+        <div class="metric">
+          <div class="label">Medium Recall</div>
+          <div class="value warn">53%</div>
+        </div>
+        <div class="metric">
+          <div class="label">运行稳定性</div>
+          <div class="value warn">47 / 50</div>
+          <div>3 条 case 出现非 JSON / 空返回 / 超时后统一记错</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>9. 结果解析：为什么有些数据没测出来或没打对</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>失败类型</th>
+            <th>代表类别 / 样例</th>
+            <th>更准确的原因</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>规则缺失</td>
+            <td>02 / 03 / 04 / 06 / 09</td>
+            <td>这些类在完整框架里有，但当前 demo 规则配置里没真正实现，所以不是“没侦测到一个词”，而是“系统本来就没有这条规则能力”。</td>
+          </tr>
+          <tr>
+            <td>侦测能力不足</td>
+            <td>05 类部分 case</td>
+            <td>当前 05 主要靠结构化 PII 正则，遇到掩码号码、姓名、住址、病历照片、非结构化隐私表达时，能力不够。</td>
+          </tr>
+          <tr>
+            <td>动作相似但类别塌缩</td>
+            <td>08 → 07</td>
+            <td>有些样例动作上看似对了，但其实只是被塌缩到了另一个同样输出 Warning 的类别，不代表规则真正存在。</td>
+          </tr>
+          <tr>
+            <td>运行稳定性问题</td>
+            <td>007 / 008 / 015</td>
+            <td>不是规则定义本身，而是模型返回了空内容、截断 JSON 或超时后统一记错，说明输出稳定性还要继续补。</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2>10. 按类别看，问题在哪里</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>类别</th>
+            <th>当前结果</th>
+            <th>怎么解读</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="pill">01</span></td>
+            <td>Category 100% / Action 100%</td>
+            <td>这是当前 demo 已实现类别，表现稳定。</td>
+          </tr>
+          <tr>
+            <td><span class="pill bad">02</span></td>
+            <td>Category 0% / Action 25%</td>
+            <td>当前 demo 没有“统方数据”这类专门规则，部分 case 被放过，还有 1 条报错。</td>
+          </tr>
+          <tr>
+            <td><span class="pill bad">03</span></td>
+            <td>Category 0% / Action 0%</td>
+            <td>超适应症大多被压成 10/Pass，说明当前 demo 还没有这条高危规则能力。</td>
+          </tr>
+          <tr>
+            <td><span class="pill bad">04</span></td>
+            <td>Category 0% / Action 0%</td>
+            <td>PV 隐瞒被错误归为 07/PassWithNotice 或直接报错，说明当前 prompt 没有专门覆盖 PV 风险。</td>
+          </tr>
+          <tr>
+            <td><span class="pill bad">05</span></td>
+            <td>Category 100% / Action 100%</td>
+            <td>CSV50 这轮 05 四条都被抓到，但当前能力仍主要依赖结构化增强，非结构化 PII 仍然是下一步最值得补的方向。</td>
+          </tr>
+          <tr>
+            <td><span class="pill bad">06</span></td>
+            <td>Category 0% / Action 0%</td>
+            <td>讲课费对价化属于我们框架里明确存在、但 demo 还没实现的类。</td>
+          </tr>
+          <tr>
+            <td><span class="pill">07</span></td>
+            <td>Category 100% / Action 100%</td>
+            <td>这是当前 demo 已实现类别，表现稳定。</td>
+          </tr>
+          <tr>
+            <td><span class="pill warn">08</span></td>
+            <td>Category 0% / Action 100%</td>
+            <td>当前虽然把 08 都打成中危，风险等级上“看起来对了”，但类别上其实被塌缩到了 07，说明只是等级相似，不代表规则真的实现了。</td>
+          </tr>
+          <tr>
+            <td><span class="pill bad">09</span></td>
+            <td>Category 0% / Action 0%</td>
+            <td>当前 demo 没有这条专门规则，规避备案类都没被正确处理。</td>
+          </tr>
+          <tr>
+            <td><span class="pill">10</span></td>
+            <td>Category 100% / Action 100%</td>
+            <td>当前低危/正常样本这轮表现稳定，也说明 risk-level 口径下的低危误报已经收敛到 0%。</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2>11. 学习 / 跑分 Log</h2>
+      <div class="sub">这部分不是单纯结果，而是把 Day06 当天的学习和优化过程留下来，方便隔天继续。</div>
+      <table>
+        <thead>
+          <tr>
+            <th>步骤</th>
+            <th>当天做了什么</th>
+            <th>学到了什么</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Step 1</td>
+            <td>把 Day06 的目标从“拿 Anthropic key”改成“接入 DeepSeek 并跑真实评测”</td>
+            <td>Day06 的重点不是厂商，而是让 demo 接上一个真实可用模型。</td>
+          </tr>
+          <tr>
+            <td>Step 2</td>
+            <td>把 `checker.py` 从 Anthropic-only 改成优先支持 DeepSeek</td>
+            <td>让模型接入不再成为学习卡点。</td>
+          </tr>
+          <tr>
+            <td>Step 3</td>
+            <td>把系统正式拆成“固定 system prompt / 用户规则 / 内部实现”三层</td>
+            <td>以后讨论 prompt、规则、结构化识别、评测时不再混层。</td>
+          </tr>
+          <tr>
+            <td>Step 4</td>
+            <td>先跑 demo 子集评测</td>
+            <td>确认当前 MVP 在自己已实现范围内是能讲得通的。</td>
+          </tr>
+          <tr>
+            <td>Step 5</td>
+            <td>再跑 CSV50 完整 benchmark</td>
+            <td>完整框架会清楚暴露当前 MVP 的边界和缺口。</td>
+          </tr>
+          <tr>
+            <td>Step 5</td>
+            <td>补 `run_eval_csv.py` 并修正 ERROR 计入口径</td>
+            <td>Release Gate 里，ERROR 不能被当成“未测试”，而要算失败。</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>完整日志见：<a href="./Day06-学习与跑分日志.md">Day06-学习与跑分日志.md</a></p>
+    </div>
+
+    <div class="card">
+      <h2>12. 关键结论</h2>
+      <ul>
+        <li>如果用当前 demo 自己的 4 类子集评测，它能拿到不错的分数；但一旦换成完整 10 类、50 条 benchmark，就会立刻暴露“能力范围不够”的问题。</li>
+        <li>这说明上一轮 30 条评测更适合证明“MVP 在自己实现范围内能跑”，而这轮 50 条更适合证明“当前 MVP 还不能代表完整产品能力”。</li>
+        <li>最值得保留的不是“分低了”，而是现在我们能非常清楚地说出：差距主要来自 <code>未实现类别</code>、<code>05 非结构化 PII 能力不足</code>、以及 <code>部分 LLM 输出稳定性</code>。</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>13. 相关文件入口</h2>
+      <ul>
+        <li><a href="./CRM-Compliance-Eval框架说明.md">CRM-Compliance-Eval框架说明.md</a></li>
+        <li><a href="./CRM-Compliance-Eval-框架-v2.html">CRM-Compliance-Eval-框架-v2.html</a></li>
+        <li><a href="./Day06-DeepSeek-跑分报告.html">Day06-DeepSeek-跑分报告.html</a></li>
+        <li><a href="./Day06-学习与跑分日志.md">Day06-学习与跑分日志.md</a></li>
+        <li><a href="./Day06-System-Prompt-固定模板.md">Day06-System-Prompt-固定模板.md</a></li>
+        <li><a href="./Day06-用户规则配置模板-v2.2.json">Day06-用户规则配置模板-v2.2.json</a></li>
+        <li><a href="./Day06-内部实现说明-v1.md">Day06-内部实现说明-v1.md</a></li>
+        <li><a href="./demo/run_eval_csv.py">demo/run_eval_csv.py</a></li>
+        <li><a href="./demo/rules_config.json">demo/rules_config.json</a></li>
+        <li><a href="./demo/checker.py">demo/checker.py</a></li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>

@@ -7,7 +7,7 @@
   - 中低危/合规类（07/10）：看 Precision 和误报率
 
 用法：
-    export ANTHROPIC_API_KEY="你自己的 key"
+    export DEEPSEEK_API_KEY="你自己的 key"
     python3 run_eval.py
 """
 
@@ -15,7 +15,7 @@ import json
 import os
 import sys
 
-from checker import classify, load_config, regex_prefilter
+from checker import classify, describe_llm_runtime, has_llm_credentials, load_config, regex_prefilter
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 CASES_PATH = os.path.join(SCRIPT_DIR, "eval_cases.json")
@@ -29,7 +29,7 @@ def load_cases():
 def run():
     config = load_config()
     cases = load_cases()
-    has_api_key = bool(os.environ.get("ANTHROPIC_API_KEY"))
+    has_api_key = has_llm_credentials()
 
     results = []
     for case in cases:
@@ -70,8 +70,11 @@ def print_report(results, has_api_key):
     print("=" * 60)
 
     if not has_api_key:
-        print("⚠️  没有设置 ANTHROPIC_API_KEY，01/07/10 类（需要LLM判断）的 case 已跳过，只测了 05 类的 regex 部分。")
-        print("    export ANTHROPIC_API_KEY=\"你的key\" 后重新运行可以测完整pipeline。\n")
+        print("⚠️  没有设置可用的 LLM key，01/07/10 类（需要LLM判断）的 case 已跳过，只测了 05 类的 regex 部分。")
+        print("    Day06 推荐：export DEEPSEEK_API_KEY=\"你的key\"")
+        print("    之后重新运行可以测完整 pipeline。\n")
+    else:
+        print(f"当前 LLM 运行时：{describe_llm_runtime()}\n")
 
     total = len(results)
     passed = sum(1 for r in results if r["status"] == "PASS")

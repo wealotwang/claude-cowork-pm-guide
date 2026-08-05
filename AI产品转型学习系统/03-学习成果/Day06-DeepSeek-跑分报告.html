@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Day06 DeepSeek 跑分报告</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f6f8fb;
+      color: #1f2937;
+      margin: 0;
+      padding: 24px;
+      line-height: 1.6;
+    }
+    .wrap {
+      max-width: 980px;
+      margin: 0 auto;
+    }
+    .card {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 18px rgba(15, 23, 42, 0.04);
+    }
+    h1, h2, h3 {
+      margin: 0 0 12px;
+    }
+    h1 {
+      font-size: 28px;
+    }
+    h2 {
+      font-size: 20px;
+    }
+    .sub {
+      color: #6b7280;
+      margin-bottom: 20px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+    }
+    .metric {
+      border: 1px solid #e5e7eb;
+      border-radius: 14px;
+      padding: 16px;
+      background: #fbfdff;
+    }
+    .label {
+      font-size: 13px;
+      color: #6b7280;
+      margin-bottom: 6px;
+    }
+    .value {
+      font-size: 28px;
+      font-weight: 700;
+    }
+    .good {
+      color: #047857;
+    }
+    .warn {
+      color: #b45309;
+    }
+    .bar {
+      width: 100%;
+      height: 10px;
+      background: #e5e7eb;
+      border-radius: 999px;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+    .bar > span {
+      display: block;
+      height: 100%;
+      background: linear-gradient(90deg, #10b981, #059669);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px;
+    }
+    th, td {
+      text-align: left;
+      padding: 10px 12px;
+      border-bottom: 1px solid #e5e7eb;
+      vertical-align: top;
+    }
+    th {
+      background: #f8fafc;
+      font-size: 13px;
+      color: #475569;
+    }
+    .pill {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      background: #ecfdf5;
+      color: #047857;
+    }
+    .pill.fail {
+      background: #fff7ed;
+      color: #c2410c;
+    }
+    ul {
+      margin: 8px 0 0 18px;
+      padding: 0;
+    }
+    a {
+      color: #2563eb;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    code {
+      background: #f3f4f6;
+      padding: 2px 6px;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>Day06 DeepSeek 跑分报告</h1>
+      <div class="sub">AI Compliance Check Assistant · 真实基线结果 · 运行时：<code>deepseek-v4-flash</code></div>
+      <p>这次不是“预检”，而是第一次把 demo 真正接到 DeepSeek 上，用现有 <code>eval_cases.json</code> 跑出的真实分数。</p>
+    </div>
+
+    <div class="card">
+      <h2>核心结果</h2>
+      <div class="grid">
+        <div class="metric">
+          <div class="label">总用例数</div>
+          <div class="value">30</div>
+        </div>
+        <div class="metric">
+          <div class="label">通过</div>
+          <div class="value good">29</div>
+          <div class="bar"><span style="width: 96.7%;"></span></div>
+        </div>
+        <div class="metric">
+          <div class="label">失败</div>
+          <div class="value warn">1</div>
+        </div>
+        <div class="metric">
+          <div class="label">跳过 / 出错</div>
+          <div class="value">0</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>关键 Metrics</h2>
+      <div class="grid">
+        <div class="metric">
+          <div class="label">高危类 Recall（01/05）</div>
+          <div class="value good">100%</div>
+          <div>7 / 7 条已测高危违规 case 被正确识别</div>
+          <div class="bar"><span style="width: 100%;"></span></div>
+        </div>
+        <div class="metric">
+          <div class="label">应放行 case 误报率</div>
+          <div class="value good">0%</div>
+          <div>0 / 16 条应放行 case 被错误拦截</div>
+          <div class="bar"><span style="width: 100%;"></span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>唯一失败样例</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Case ID</th>
+            <th>输入</th>
+            <th>期望</th>
+            <th>实际</th>
+            <th>说明</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="pill fail">05-gap-1</span></td>
+            <td>记录了特殊患者赵六的完整体检报告和电话号码以便后期随访</td>
+            <td>05 / Block</td>
+            <td>10 / Pass</td>
+            <td>这是已知局限，不是意外翻车。当前 05 类只做结构化 PII 正则，没有覆盖“电话号码”这类非结构化敏感信息。</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2>怎么理解这次结果</h2>
+      <ul>
+        <li>这轮结果已经说明：demo 不只是“能跑”，而是已经有真实评测证据。</li>
+        <li>高危类 Recall 100% 很关键，因为这部分最接近 release gate 逻辑。</li>
+        <li>误报率 0% 说明当前规则在 demo 范围内没有把明显应放行内容误杀掉。</li>
+        <li>唯一失败点反而是好事，因为它清楚暴露了下一步能力扩展方向：非结构化 PII 识别。</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>本次 Day06 相关文件</h2>
+      <ul>
+        <li><a href="./Day06-学习卡.md">Day06-学习卡.md</a></li>
+        <li><a href="./Day06-荣誉墙.md">Day06-荣誉墙.md</a></li>
+        <li><a href="./demo/README.md">demo/README.md</a></li>
+        <li><a href="./demo/eval_cases.json">demo/eval_cases.json</a></li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>此前 Eval 入口</h2>
+      <ul>
+        <li><a href="./crm-compliance-checker-eval-v1.html">crm-compliance-checker-eval-v1.html</a></li>
+        <li><a href="./CRM-Compliance-Eval-框架-v2.html">CRM-Compliance-Eval-框架-v2.html</a></li>
+        <li><a href="./CRM-Compliance-Eval框架说明.md">CRM-Compliance-Eval框架说明.md</a></li>
+        <li><a href="./Day03-AI-Compliance-Eval-设计学习报告.md">Day03-AI-Compliance-Eval-设计学习报告.md</a></li>
+        <li><a href="./Day03-AI-Compliance-Eval-设计学习报告-可视化版.html">Day03-AI-Compliance-Eval-设计学习报告-可视化版.html</a></li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>
