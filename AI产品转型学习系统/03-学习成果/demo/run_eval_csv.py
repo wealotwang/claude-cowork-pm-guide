@@ -10,10 +10,12 @@
     python3 run_eval_csv.py
 """
 
+import argparse
 import csv
 import json
 import os
 import sys
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from collections import defaultdict
 
 from checker import classify, describe_llm_runtime, has_llm_credentials, load_config
@@ -23,11 +25,17 @@ DEFAULT_CSV_PATH = "/Users/li/ai pm learning/claude-cowork-pm-guide/medical_crm_
 
 ACTION_MAP = {
     "Reject (一票否决)": "Reject",
+    "Reject": "Reject",
     "Block (数据阻断)": "Block",
+    "Block": "Block",
     "Warning (打回修改)": "Warning",
+    "Warning": "Warning",
     "Notice (合规提醒)": "Notice",
+    "Notice": "Notice",
     "Pass (通过并提示)": "Pass",
     "Pass (完全通过)": "Pass",
+    "Pass (Notice)": "Pass",
+    "Pass": "Pass",
 }
 
 HIGH_RISK_LEVELS = {"Critical"}
@@ -45,26 +53,74 @@ def normalize_action_for_diagnostic(action):
     return action
 
 
+def normalize_category_id(category_id):
+    raw = str(category_id or "").strip()
+    if not raw:
+        return raw
+    if raw.isdigit():
+        return raw.zfill(2)
+    return raw
+
+
+def normalize_expected_action(action):
+    raw = str(action or "").strip()
+    if not raw:
+        return None
+    return ACTION_MAP.get(raw, raw)
+
+
 def load_cases(csv_path):
     rows = []
     with open(csv_path, "r", encoding="utf-8-sig", newline="") as f:
         reader = csv.DictReader(f)
         for row in reader:
+            expected_action = normalize_expected_action(row.get("预期处置动作"))
             rows.append(
                 {
                     "id": row["Case ID"],
-                    "expected_category": row["分类ID"],
+                    "expected_category": normalize_category_id(row["分类ID"]),
                     "category_name": row["风险分类"],
                     "text": row["CRM拜访记录文本"],
                     "risk_level": row["风险等级"],
-                    "expected_action": ACTION_MAP[row["预期处置动作"]],
+                    "expected_action": expected_action,
                     "rationale": row["合规判定依据"],
                 }
             )
     return rows
 
 
-def evaluate(csv_path):
+def evaluate_one(case, config):
+    try:
+        actual = classify(case["text"], config)
+        return {
+            **case,
+            "actual_category": normalize_category_id(actual["matched_category"]),
+            "actual_action": actual["action"],
+            "actual_risk_level": actual["risk_level"],
+            "actual_rationale": actual.get("rationale", ""),
+            "exact_category": normalize_category_id(actual["matched_category"]) == case["expected_category"],
+            "exact_action": (
+                normalize_action_for_diagnostic(actual["action"])
+                == normalize_action_for_diagnostic(case["expected_action"])
+                if case["expected_action"] is not None
+                else None
+            ),
+            "status": "OK",
+        }
+    except RuntimeError as e:
+        return {
+            **case,
+            "actual_category": None,
+            "actual_action": None,
+            "actual_risk_level": None,
+            "actual_rationale": "",
+            "exact_category": False,
+            "exact_action": None,
+            "status": f"ERROR: {e}",
+        }
+
+
+def evaluate(csv_path, max_workers=1, progress_every=0, results_out=None):
     if not has_llm_credentials():
         raise RuntimeError(
             "没有找到可用的 LLM key。请先在你自己的终端里设置：\n"
@@ -74,44 +130,47 @@ def evaluate(csv_path):
 
     config = load_config()
     cases = load_cases(csv_path)
-    results = []
-    for case in cases:
-        try:
-            actual = classify(case["text"], config)
-            results.append(
-                {
-                    **case,
-                    "actual_category": actual["matched_category"],
-                    "actual_action": actual["action"],
-                    "actual_risk_level": actual["risk_level"],
-                    "actual_rationale": actual.get("rationale", ""),
-                    "exact_category": actual["matched_category"] == case["expected_category"],
-                    "exact_action": normalize_action_for_diagnostic(actual["action"])
-                    == normalize_action_for_diagnostic(case["expected_action"]),
-                    "status": "OK",
+    indexed_results = [None] * len(cases)
+    results_fp = open(results_out, "w", encoding="utf-8") if results_out else None
+    completed = 0
+    try:
+        if max_workers <= 1:
+            for idx, case in enumerate(cases):
+                result = evaluate_one(case, config)
+                indexed_results[idx] = result
+                completed += 1
+                if results_fp:
+                    results_fp.write(json.dumps(result, ensure_ascii=False) + "\n")
+                    results_fp.flush()
+                if progress_every and completed % progress_every == 0:
+                    print(f"[progress] {completed}/{len(cases)}", file=sys.stderr, flush=True)
+        else:
+            with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                future_to_idx = {
+                    executor.submit(evaluate_one, case, config): idx for idx, case in enumerate(cases)
                 }
-            )
-        except RuntimeError as e:
-            results.append(
-                {
-                    **case,
-                    "actual_category": None,
-                    "actual_action": None,
-                    "actual_risk_level": None,
-                    "actual_rationale": "",
-                    "exact_category": False,
-                    "exact_action": False,
-                    "status": f"ERROR: {e}",
-                }
-            )
-    return results
+                for future in as_completed(future_to_idx):
+                    idx = future_to_idx[future]
+                    result = future.result()
+                    indexed_results[idx] = result
+                    completed += 1
+                    if results_fp:
+                        results_fp.write(json.dumps(result, ensure_ascii=False) + "\n")
+                        results_fp.flush()
+                    if progress_every and completed % progress_every == 0:
+                        print(f"[progress] {completed}/{len(cases)}", file=sys.stderr, flush=True)
+    finally:
+        if results_fp:
+            results_fp.close()
+    return indexed_results
 
 
 def build_summary(results):
     total = len(results)
     tested = [r for r in results if r["status"] == "OK"]
     errored = [r for r in results if r["status"] != "OK"]
-    exact_action_hits = sum(1 for r in results if r["exact_action"])
+    action_labeled = [r for r in results if r["exact_action"] is not None]
+    exact_action_hits = sum(1 for r in action_labeled if r["exact_action"])
     exact_category_hits = sum(1 for r in results if r["exact_category"])
 
     critical = [r for r in results if r["risk_level"] in HIGH_RISK_LEVELS]
@@ -125,19 +184,21 @@ def build_summary(results):
     expected_low = [r for r in results if r["risk_level"] in LOW_RISK_LEVELS]
     low_false_positives = [r for r in expected_low if r["actual_risk_level"] not in LOW_RISK_LEVELS]
 
-    per_category = defaultdict(lambda: {"total": 0, "exact_category": 0, "exact_action": 0})
+    per_category = defaultdict(lambda: {"total": 0, "exact_category": 0, "exact_action": 0, "action_labeled": 0})
     for r in results:
         stat = per_category[r["expected_category"]]
         stat["total"] += 1
         stat["exact_category"] += int(r["exact_category"])
-        stat["exact_action"] += int(r["exact_action"])
+        if r["exact_action"] is not None:
+            stat["action_labeled"] += 1
+            stat["exact_action"] += int(r["exact_action"])
 
     return {
         "model": describe_llm_runtime(),
         "total": total,
         "tested": len(tested),
         "errored": len(errored),
-        "overall_exact_action_accuracy": exact_action_hits / total if total else 0,
+        "overall_exact_action_accuracy": exact_action_hits / len(action_labeled) if action_labeled else None,
         "overall_exact_category_accuracy": exact_category_hits / total if total else 0,
         "critical_recall_release_gate": len(critical_caught) / len(critical) if critical else 0,
         "critical_exact_category_recall_diagnostic": len(critical_exact_category) / len(critical) if critical else 0,
@@ -155,11 +216,13 @@ def build_summary(results):
             cat: {
                 "total": stat["total"],
                 "exact_category_accuracy": stat["exact_category"] / stat["total"],
-                "exact_action_accuracy": stat["exact_action"] / stat["total"],
+                "exact_action_accuracy": (
+                    stat["exact_action"] / stat["action_labeled"] if stat["action_labeled"] else None
+                ),
             }
             for cat, stat in sorted(per_category.items())
         },
-        "action_failures": [r for r in results if not r["exact_action"]],
+        "action_failures": [r for r in results if r["exact_action"] is False],
         "category_failures": [r for r in results if not r["exact_category"]],
         "errors": errored,
     }
@@ -185,18 +248,23 @@ def print_summary(csv_path, summary):
     print()
     print(
         "Diagnostic 指标："
-        f"\n- Overall Exact Action Accuracy：{summary['overall_exact_action_accuracy']:.0%}"
         f"\n- Overall Exact Category Accuracy：{summary['overall_exact_category_accuracy']:.0%}"
         f"\n- Critical Exact Category Recall：{summary['critical_exact_category_recall_diagnostic']:.0%}"
         f"\n- Medium Recall：{summary['medium_recall_diagnostic']:.0%}"
     )
+    if summary["overall_exact_action_accuracy"] is not None:
+        print(f"- Overall Exact Action Accuracy：{summary['overall_exact_action_accuracy']:.0%}")
+    else:
+        print("- Overall Exact Action Accuracy：当前数据集未提供或未使用预期动作，不纳入评测")
     print("\n按类别结果：")
     for cat, stat in summary["per_category"].items():
-        print(
-            f"- {cat}: total={stat['total']}, "
-            f"exact_category_accuracy={stat['exact_category_accuracy']:.0%}, "
-            f"exact_action_accuracy={stat['exact_action_accuracy']:.0%}"
-        )
+        parts = [
+            f"- {cat}: total={stat['total']}",
+            f"exact_category_accuracy={stat['exact_category_accuracy']:.0%}",
+        ]
+        if stat["exact_action_accuracy"] is not None:
+            parts.append(f"exact_action_accuracy={stat['exact_action_accuracy']:.0%}")
+        print(", ".join(parts))
     if summary["action_failures"]:
         print("\n前 12 条 action failure：")
         for row in summary["action_failures"][:12]:
@@ -210,13 +278,25 @@ def print_summary(csv_path, summary):
             print(f"- [{row['id']}] {row['status']} 文本={row['text'][:40]}")
 
 
+def parse_args():
+    parser = argparse.ArgumentParser(description="运行 CSV 合规评测")
+    parser.add_argument("csv_path", nargs="?", default=DEFAULT_CSV_PATH)
+    parser.add_argument("--workers", type=int, default=1, help="并发 worker 数，默认 1")
+    parser.add_argument("--progress-every", type=int, default=0, help="每处理 N 条打印一次进度")
+    parser.add_argument("--results-out", default=None, help="逐条结果输出到 jsonl 文件")
+    return parser.parse_args()
+
+
 def main():
-    csv_path = DEFAULT_CSV_PATH
-    if len(sys.argv) > 1:
-        csv_path = sys.argv[1]
-    results = evaluate(csv_path)
+    args = parse_args()
+    results = evaluate(
+        args.csv_path,
+        max_workers=max(1, args.workers),
+        progress_every=max(0, args.progress_every),
+        results_out=args.results_out,
+    )
     summary = build_summary(results)
-    print_summary(csv_path, summary)
+    print_summary(args.csv_path, summary)
 
 
 if __name__ == "__main__":
