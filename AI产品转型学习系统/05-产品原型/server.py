@@ -2,14 +2,11 @@
 """
 05-产品原型 统一本地服务
 
-这是合规工作台的共用后端，被网页前端（同目录 index.html）的两个 tab 共用：
-  - 规则配置：读写 规则配置/rules_config.json（不需要 LLM key）
-  - 规则执行：跑 规则执行/ 下的 checker.py 对某个数据集做一键评测（需要 LLM key）
-
-迁移说明：本文件由 规则配置/server.py 升级而来（那份文件已标注归档，指向这里）。
-规则配置相关的 load_rules/save_rules/Handler.do_GET("/api/rules") 逻辑完全没变，
-只是路径从"同目录"改成指向 规则配置/ 子目录；新增的是 /api/datasets 和 /api/run
-这两个"规则执行"模块的接口。
+这是合规工作台的共用后端，被网页前端（同目录 index.html）的四个 tab 共用：
+  ① 规则配置：读写 规则配置/rules_config.json（不需要 LLM key）
+  ② 规则执行：跑 规则执行/ 下的 checker.py 对某个数据集做一键评测（需要 LLM key）
+  ③ 命中结果：浏览 命中结果/ 下的历史跑分记录
+  ④ 分析报告：从某次命中结果自动生成分析，可导出独立 HTML
 
 不依赖任何第三方包，只用 Python 标准库。
 
@@ -18,8 +15,8 @@
     python3 server.py
     # 浏览器打开 http://127.0.0.1:8787
 
-规则配置这部分不需要 API key。规则执行这部分（点"运行评测"）需要你在启动 server.py
-之前，在同一个终端里先设置好 DEEPSEEK_API_KEY（或 ANTHROPIC_API_KEY）：
+规则配置、命中结果、分析报告这三个 tab 都不需要 API key。只有"规则执行"点运行时需要，
+且必须在启动 server.py 之前，在同一个终端里先设置好：
     export DEEPSEEK_API_KEY="你自己的 key"
     python3 server.py
 这个值只会被 checker.py 从环境变量里读一次去调用 LLM API，本脚本不会存储、不会记录它。
@@ -31,11 +28,13 @@ import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from urllib.parse import urlparse, parse_qs
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 RULES_DIR = os.path.join(SCRIPT_DIR, "规则配置")
 EXEC_DIR = os.path.join(SCRIPT_DIR, "规则执行")
 HITS_DIR = os.path.join(SCRIPT_DIR, "命中结果")
+REPORT_DIR = os.path.join(SCRIPT_DIR, "分析报告")
 
 RULES_PATH = os.path.join(RULES_DIR, "rules_config.json")
 INDEX_PATH = os.path.join(SCRIPT_DIR, "index.html")
@@ -43,17 +42,16 @@ PORT = 8787
 
 REQUIRED_CATEGORY_FIELDS = {"name", "risk_level", "action", "description", "examples", "boundary_examples"}
 
-# 规则执行模块（checker.py / run_eval.py / run_eval_csv.py）是兄弟目录下的独立文件，
-# 不是 pip 包，所以手动把它加进 sys.path 才能 import。
+# 规则执行/分析报告是兄弟目录下的独立文件，不是 pip 包，手动加进 sys.path 才能 import
 sys.path.insert(0, EXEC_DIR)
+sys.path.insert(0, REPORT_DIR)
 import checker  # noqa: E402
-import run_eval as mvp_eval  # noqa: E402
+import datasets as ds  # noqa: E402
 import run_eval_csv as csv_eval  # noqa: E402
+import report as report_mod  # noqa: E402
 
-CSV50_PATH = csv_eval.DEFAULT_CSV_PATH
 
-
-# ---------- 规则配置：读写 rules_config.json ----------
+# ---------- ① 规则配置：读写 rules_config.json ----------
 
 def load_rules():
     with open(RULES_PATH, "r", encoding="utf-8") as f:
@@ -73,56 +71,21 @@ def save_rules(data):
         f.write("\n")
 
 
-# ---------- 规则执行：一键跑评测 ----------
-
-def normalize_mvp_cases(config):
-    """把 eval_cases.json 的字段名对齐成 run_eval_csv.evaluate_one() 期望的形状。"""
-    raw_cases = mvp_eval.load_cases()
-    out = []
-    for c in raw_cases:
-        cat_meta = config["categories"].get(c["expected_category"], {})
-        out.append({
-            "id": c["id"],
-            "expected_category": c["expected_category"],
-            "category_name": cat_meta.get("name", ""),
-            "text": c["input"],
-            "risk_level": cat_meta.get("risk_level", "Low"),
-            # MVP子集的 expected_action 还是 Day05 时期的旧动作名（Block/Warning等），
-            # 跟当前 action_space 对不上，这里直接不比对动作，只比对类别，
-            # 跟 run_eval.py 的既有做法保持一致。
-            "expected_action": None,
-            "rationale": c.get("note", ""),
-        })
-    return out
-
-
-def resolve_cases(dataset, custom_path, config):
-    if dataset == "mvp":
-        return normalize_mvp_cases(config), "MVP子集（eval_cases.json）"
-    if dataset == "csv50":
-        if not os.path.exists(CSV50_PATH):
-            raise ValueError(f"找不到默认CSV文件：{CSV50_PATH}")
-        return csv_eval.load_cases(CSV50_PATH), "完整CSV50"
-    if dataset == "custom":
-        if not custom_path:
-            raise ValueError("请填写自定义数据集的文件路径")
-        if not os.path.exists(custom_path):
-            raise ValueError(f"找不到文件：{custom_path}")
-        return csv_eval.load_cases(custom_path), f"自定义（{custom_path}）"
-    raise ValueError(f"未知的数据集类型：{dataset}")
-
+# ---------- ② 规则执行：一键跑评测 ----------
 
 def run_dataset(dataset, custom_path=None, workers=1):
     if not checker.has_llm_credentials():
         raise RuntimeError(
             "没有配置可用的 LLM key。请先停掉 server.py，在同一个终端里运行："
             '\n    export DEEPSEEK_API_KEY="你的key"'
-            "\n（或者 export ANTHROPIC_API_KEY=\"你的key\"）"
+            '\n（或者 export ANTHROPIC_API_KEY="你的key"）'
             "\n然后重新运行 python3 server.py 再点一次运行评测。"
         )
 
     config = checker.load_config()
-    cases, dataset_label = resolve_cases(dataset, custom_path, config)
+    cases, dataset_label, data_issues = ds.load_dataset_cases(dataset, config, custom_path=custom_path)
+    if not cases:
+        raise ValueError(f"数据集「{dataset_label}」里一条case都没有，检查一下文件内容")
 
     started = datetime.now()
     if workers and workers > 1:
@@ -139,19 +102,28 @@ def run_dataset(dataset, custom_path=None, workers=1):
 
     summary = csv_eval.build_summary(results)
 
-    run_id = started.strftime("%Y%m%d_%H%M%S")
+    # run_id 用秒级时间戳，但两次跑分可能落在同一秒（小数据集+高并发时很容易），
+    # 那样后一次会直接覆盖前一次的结果文件。所以撞了就加后缀，保证每次跑分的记录都留得下来。
+    os.makedirs(HITS_DIR, exist_ok=True)
+    base_run_id = started.strftime("%Y%m%d_%H%M%S")
+    run_id = base_run_id
+    suffix = 1
+    while os.path.exists(os.path.join(HITS_DIR, f"hits_{run_id}.json")):
+        suffix += 1
+        run_id = f"{base_run_id}_{suffix}"
+
     record = {
         "run_id": run_id,
         "dataset": dataset,
         "dataset_label": dataset_label,
         "custom_path": custom_path,
+        "data_issues": data_issues,
         "started_at": started.isoformat(timespec="seconds"),
         "finished_at": finished.isoformat(timespec="seconds"),
         "summary": summary,
         "results": results,
     }
 
-    os.makedirs(HITS_DIR, exist_ok=True)
     out_path = os.path.join(HITS_DIR, f"hits_{run_id}.json")
     with open(out_path, "w", encoding="utf-8") as f:
         json.dump(record, f, ensure_ascii=False, indent=2)
@@ -170,55 +142,87 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    def _send_file(self, path, content_type):
+        try:
+            with open(path, "rb") as f:
+                body = f.read()
+            self.send_response(200)
+            self.send_header("Content-Type", content_type)
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+        except FileNotFoundError:
+            self._send_json({"error": f"文件不存在：{path}"}, status=404)
+
     def do_GET(self):
-        if self.path == "/" or self.path == "/index.html":
-            try:
-                with open(INDEX_PATH, "rb") as f:
-                    body = f.read()
-                self.send_response(200)
-                self.send_header("Content-Type", "text/html; charset=utf-8")
-                self.send_header("Content-Length", str(len(body)))
-                self.end_headers()
-                self.wfile.write(body)
-            except FileNotFoundError:
-                self._send_json({"error": "index.html 不存在"}, status=500)
+        parsed = urlparse(self.path)
+        path = parsed.path
+        query = parse_qs(parsed.query)
+
+        if path in ("/", "/index.html"):
+            self._send_file(INDEX_PATH, "text/html; charset=utf-8")
             return
 
-        if self.path == "/api/rules":
+        if path == "/api/rules":
             try:
-                data = load_rules()
-                self._send_json(data)
+                self._send_json(load_rules())
             except Exception as e:
                 self._send_json({"error": str(e)}, status=500)
             return
 
-        if self.path == "/api/datasets":
+        if path == "/api/datasets":
             try:
-                mvp_count = len(mvp_eval.load_cases())
-            except Exception:
-                mvp_count = None
-            self._send_json({
-                "presets": [
-                    {
-                        "key": "mvp",
-                        "label": f"MVP子集（eval_cases.json，{mvp_count if mvp_count is not None else '?'}条）",
-                    },
-                    {
-                        "key": "csv50",
-                        "label": "完整CSV50",
-                        "path": CSV50_PATH,
-                        "exists": os.path.exists(CSV50_PATH),
-                    },
-                ],
-                "has_api_key": checker.has_llm_credentials(),
-                "llm_runtime": checker.describe_llm_runtime(),
-            })
+                self._send_json({
+                    "datasets": ds.list_datasets(),
+                    "has_api_key": checker.has_llm_credentials(),
+                    "llm_runtime": checker.describe_llm_runtime(),
+                })
+            except Exception as e:
+                self._send_json({"error": str(e)}, status=500)
+            return
+
+        # ③ 命中结果：列表 + 单次详情
+        if path == "/api/runs":
+            try:
+                self._send_json({"runs": report_mod.list_runs()})
+            except Exception as e:
+                self._send_json({"error": str(e)}, status=500)
+            return
+
+        if path.startswith("/api/runs/"):
+            run_id = path[len("/api/runs/"):]
+            try:
+                self._send_json(report_mod.load_run(run_id))
+            except ValueError as e:
+                self._send_json({"error": str(e)}, status=404)
+            except Exception as e:
+                self._send_json({"error": str(e)}, status=500)
+            return
+
+        # ④ 分析报告：生成 + 导出
+        if path.startswith("/api/report/"):
+            run_id = path[len("/api/report/"):]
+            want_export = query.get("export", ["0"])[0] == "1"
+            try:
+                run = report_mod.load_run(run_id)
+                rep = report_mod.build_report(run)
+                if want_export:
+                    out = report_mod.export_html(rep)
+                    self._send_json({"status": "ok", "export_path": out, "report": rep})
+                else:
+                    self._send_json(rep)
+            except ValueError as e:
+                self._send_json({"error": str(e)}, status=404)
+            except Exception as e:
+                self._send_json({"error": str(e)}, status=500)
             return
 
         self._send_json({"error": "未知路径"}, status=404)
 
     def do_POST(self):
-        if self.path == "/api/rules":
+        path = urlparse(self.path).path
+
+        if path == "/api/rules":
             length = int(self.headers.get("Content-Length", 0))
             raw = self.rfile.read(length)
             try:
@@ -233,19 +237,21 @@ class Handler(BaseHTTPRequestHandler):
                 self._send_json({"error": str(e)}, status=500)
             return
 
-        if self.path == "/api/run":
+        if path == "/api/run":
             length = int(self.headers.get("Content-Length", 0))
             raw = self.rfile.read(length)
             try:
                 body = json.loads(raw.decode("utf-8")) if raw else {}
-                dataset = body.get("dataset")
-                custom_path = body.get("custom_path")
-                workers = int(body.get("workers") or 1)
-                record, out_path = run_dataset(dataset, custom_path=custom_path, workers=workers)
+                record, out_path = run_dataset(
+                    body.get("dataset"),
+                    custom_path=body.get("custom_path"),
+                    workers=int(body.get("workers") or 1),
+                )
                 self._send_json({
                     "status": "ok",
                     "run_id": record["run_id"],
                     "dataset_label": record["dataset_label"],
+                    "data_issues": record["data_issues"],
                     "summary": record["summary"],
                     "results": record["results"],
                     "results_file": out_path,
@@ -261,7 +267,6 @@ class Handler(BaseHTTPRequestHandler):
         self._send_json({"error": "未知路径"}, status=404)
 
     def log_message(self, format, *args):
-        # 精简一下默认日志，只保留方法+路径+状态码
         print(f"[server] {self.command} {self.path} -> {args[1] if len(args) > 1 else ''}")
 
 
@@ -272,6 +277,7 @@ def main():
     server = HTTPServer(("127.0.0.1", PORT), Handler)
     print(f"合规工作台已启动：http://127.0.0.1:{PORT}")
     print(f"当前 LLM 运行时：{checker.describe_llm_runtime()}")
+    print(f"可用数据集：{len(ds.list_datasets())} 个（往 数据集/ 里丢CSV即可自动出现）")
     print("按 Ctrl+C 停止")
     try:
         server.serve_forever()

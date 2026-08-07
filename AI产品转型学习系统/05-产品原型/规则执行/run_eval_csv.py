@@ -3,30 +3,35 @@
 用完整 50 条 CSV benchmark（或任意外部 CSV，如 Day07 的 300 case）跑一次当前 demo，
 并输出更贴近 Release Gate 的结果。
 
-迁移说明：从 03-学习成果/demo/run_eval_csv.py 迁移而来（原文件已归档，标注指向这里），
-逻辑未改动。
+迁移说明：从 03-学习成果/demo/run_eval_csv.py 迁移而来（原文件已归档，标注指向这里）。
+评测逻辑没变，两处更新：CSV读取改为复用 datasets.py（统一列名兼容，网页和CLI共用同一套
+解析），默认数据集改为指向 ../数据集/ 下产品自带的那份。
 
 默认数据集：
-    /Users/li/ai pm learning/claude-cowork-pm-guide/medical_crm_compliance_eval_dataset_cn.csv
+    ../数据集/csv50-医药CRM合规评测集.csv
 
 用法：
     export DEEPSEEK_API_KEY="你的key"
     python3 run_eval_csv.py
-    python3 run_eval_csv.py /path/to/300case.csv --workers 4 --progress-every 20 --results-out out.jsonl
+    python3 run_eval_csv.py ../数据集/200case-医药CRM合规压力测试集.csv --workers 4 --progress-every 20
 """
 
 import argparse
-import csv
 import json
 import os
 import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from collections import defaultdict
 
+import datasets as ds
 from checker import classify, describe_llm_runtime, has_llm_credentials, load_config
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-DEFAULT_CSV_PATH = "/Users/li/ai pm learning/claude-cowork-pm-guide/medical_crm_compliance_eval_dataset_cn.csv"
+# 默认数据集改成产品自带的那份（数据集/ 文件夹是所有评测数据的统一入口），
+# 不再指向仓库根目录的散落文件——换台机器就不用改代码了。
+DEFAULT_CSV_PATH = os.path.join(
+    os.path.dirname(SCRIPT_DIR), "数据集", "csv50-医药CRM合规评测集.csv"
+)
 
 ACTION_MAP = {
     "Reject (一票否决)": "Reject",
@@ -74,23 +79,12 @@ def normalize_expected_action(action):
     return ACTION_MAP.get(raw, raw)
 
 
-def load_cases(csv_path):
-    rows = []
-    with open(csv_path, "r", encoding="utf-8-sig", newline="") as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            expected_action = normalize_expected_action(row.get("预期处置动作"))
-            rows.append(
-                {
-                    "id": row["Case ID"],
-                    "expected_category": normalize_category_id(row["分类ID"]),
-                    "category_name": row["风险分类"],
-                    "text": row["CRM拜访记录文本"],
-                    "risk_level": row["风险等级"],
-                    "expected_action": expected_action,
-                    "rationale": row["合规判定依据"],
-                }
-            )
+def load_cases(csv_path, config=None):
+    """读CSV。列名归一化统一交给 datasets.py 处理，这样CLI和网页用的是同一套解析逻辑，
+    不会出现"网页能读这个CSV、命令行读不了"的情况。"""
+    rows, issues = ds.load_csv_cases(csv_path, config)
+    for issue in issues:
+        print(f"[数据质量] {issue['case_id']}: {issue['problem']}", file=sys.stderr)
     return rows
 
 
@@ -134,7 +128,7 @@ def evaluate(csv_path, max_workers=1, progress_every=0, results_out=None):
         )
 
     config = load_config()
-    cases = load_cases(csv_path)
+    cases = load_cases(csv_path, config)
     indexed_results = [None] * len(cases)
     results_fp = open(results_out, "w", encoding="utf-8") if results_out else None
     completed = 0

@@ -12,23 +12,23 @@
   * { box-sizing: border-box; }
   body { margin: 0; padding: 24px; background: var(--bg); color: var(--text);
     font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Segoe UI", sans-serif; line-height: 1.6; }
-  .wrap { max-width: 980px; margin: 0 auto; }
+  .wrap { max-width: 1000px; margin: 0 auto; }
   .hero { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 20px; margin-bottom: 18px; }
   .hero h1 { margin: 0 0 6px; font-size: 24px; }
   .hero p { margin: 0; color: var(--muted); font-size: 14px; }
-  .tabs { display: flex; gap: 6px; margin-bottom: 16px; }
+  .tabs { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
   .tab-btn { border: 1px solid var(--line); background: var(--card); color: var(--muted);
     border-radius: 10px; padding: 8px 16px; font-size: 14px; font-weight: 600; cursor: pointer; }
   .tab-btn.active { background: var(--blue); color: #fff; border-color: var(--blue); }
   .panel { display: none; }
   .panel.active { display: block; }
   .toolbar { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
-  button { border: none; border-radius: 10px; padding: 10px 16px; font-size: 14px; font-weight: 600;
-    cursor: pointer; }
+  button { border: none; border-radius: 10px; padding: 10px 16px; font-size: 14px; font-weight: 600; cursor: pointer; }
   button:disabled { opacity: 0.5; cursor: not-allowed; }
   .btn-primary { background: var(--blue); color: #fff; }
   .btn-secondary { background: #eef2ff; color: #3730a3; }
   .btn-danger { background: #fef2f2; color: var(--red); }
+  .btn-sm { padding: 5px 10px; font-size: 13px; }
   .btn-primary:hover, .btn-secondary:hover, .btn-danger:hover { opacity: 0.85; }
   .status { font-size: 13px; color: var(--muted); }
   .status.ok { color: var(--green); }
@@ -46,40 +46,53 @@
   .card-actions { display: flex; gap: 8px; margin-top: 10px; }
   .hint { font-size: 12px; color: var(--muted); margin-top: 2px; }
   .action-space-note { font-size: 12px; color: var(--muted); margin-bottom: 14px; }
-  #loading { color: var(--muted); padding: 20px; }
-
+  .loading { color: var(--muted); padding: 20px; }
   .run-form { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 10px; }
-  .run-form .field { margin-bottom: 0; min-width: 220px; }
+  .run-form .field { margin-bottom: 0; min-width: 240px; }
   .run-form .field.narrow { min-width: 100px; }
   .llm-note { font-size: 13px; margin-bottom: 14px; }
   .llm-note.ok { color: var(--green); }
   .llm-note.err { color: var(--red); }
-  .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-bottom: 16px; }
+  .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(165px, 1fr)); gap: 10px; margin-bottom: 16px; }
   .metric { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
   .metric .label { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
   .metric .value { font-size: 20px; font-weight: 700; }
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
   th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
   th { color: var(--muted); font-weight: 600; }
+  tr.clickable { cursor: pointer; }
+  tr.clickable:hover { background: #f9fafb; }
   .tag { display: inline-block; border-radius: 999px; padding: 2px 8px; font-size: 12px; font-weight: 700; }
   .tag-fail { background: #fef2f2; color: var(--red); }
   .tag-error { background: #fffbeb; color: var(--orange); }
-  #runStatus { margin-bottom: 10px; }
+  .tag-ok { background: #ecfdf5; color: var(--green); }
+  .tag-scope { background: #eef2ff; color: #3730a3; }
+  .callout { background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 12px; padding: 14px 16px; margin-bottom: 14px; }
+  .callout p { margin: 0 0 4px; }
+  .callout .note { color: #4338ca; font-size: 13px; margin: 0; }
+  .warn { background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px; padding: 12px 14px; margin-bottom: 14px; font-size: 13px; }
+  .bucket-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .bucket-head h3 { margin: 0; font-size: 16px; }
+  .bucket-meaning { color: var(--muted); font-size: 13px; margin: 4px 0 2px; }
+  .bucket-action { font-size: 13px; margin: 0 0 8px; }
+  .empty { color: var(--muted); font-size: 14px; padding: 8px 0; }
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="hero">
     <h1>合规工作台</h1>
-    <p>AI Compliance Check Assistant · 本地个人工具，两个模块共用同一个后端：规则配置负责"改规则"，规则执行负责"跑评测、看命中结果"。</p>
+    <p>AI Compliance Check Assistant · 本地个人工具。四个模块共用一个后端：配规则 → 跑评测 → 看命中结果 → 出分析报告。</p>
   </div>
 
   <div class="tabs">
     <button class="tab-btn active" data-tab="rules" onclick="switchTab('rules')">① 规则配置</button>
     <button class="tab-btn" data-tab="run" onclick="switchTab('run')">② 规则执行</button>
+    <button class="tab-btn" data-tab="hits" onclick="switchTab('hits')">③ 命中结果</button>
+    <button class="tab-btn" data-tab="report" onclick="switchTab('report')">④ 分析报告</button>
   </div>
 
-  <!-- ============ Tab 1: 规则配置 ============ -->
+  <!-- ① 规则配置 -->
   <div class="panel active" id="panel-rules">
     <div class="toolbar">
       <button class="btn-secondary" onclick="addCategory()">+ 新增类目</button>
@@ -87,54 +100,81 @@
       <span id="rulesStatus" class="status"></span>
     </div>
     <div class="action-space-note" id="actionSpaceNote"></div>
-
-    <div id="rulesLoading">加载中…</div>
+    <div id="rulesLoading" class="loading">加载中…</div>
     <div id="cards"></div>
   </div>
 
-  <!-- ============ Tab 2: 规则执行 ============ -->
+  <!-- ② 规则执行 -->
   <div class="panel" id="panel-run">
     <div class="card">
       <div id="llmNote" class="llm-note">检查 LLM key 配置中…</div>
       <div class="run-form">
         <div class="field">
           <label>数据集</label>
-          <select id="datasetSelect" onchange="onDatasetChange()">
-            <option value="mvp">MVP子集</option>
-            <option value="csv50">完整CSV50</option>
-            <option value="custom">自定义路径（比如300 case）</option>
-          </select>
+          <select id="datasetSelect" onchange="onDatasetChange()"><option value="">加载中…</option></select>
         </div>
         <div class="field" id="customPathField" style="display:none;">
           <label>CSV文件绝对路径</label>
-          <input type="text" id="customPathInput" placeholder="/Users/.../300case.csv">
+          <input type="text" id="customPathInput" placeholder="/Users/.../your.csv">
         </div>
         <div class="field narrow">
-          <label>并发数（默认1）</label>
+          <label>并发数</label>
           <input type="number" id="workersInput" min="1" max="8" value="1">
         </div>
         <button class="btn-primary" id="runBtn" onclick="runEval()">运行评测</button>
       </div>
-      <div class="hint" id="datasetHint"></div>
+      <div class="hint">想加新数据集？把 CSV 丢进 <code>05-产品原型/数据集/</code> 文件夹，重启 server.py 就会自动出现在上面的下拉框里。</div>
     </div>
-
     <div id="runStatus" class="status"></div>
     <div id="runResults"></div>
+  </div>
+
+  <!-- ③ 命中结果 -->
+  <div class="panel" id="panel-hits">
+    <div class="toolbar">
+      <button class="btn-secondary btn-sm" onclick="loadRuns()">刷新列表</button>
+      <span id="hitsStatus" class="status"></span>
+    </div>
+    <div id="runsList" class="loading">加载中…</div>
+    <div id="runDetail"></div>
+  </div>
+
+  <!-- ④ 分析报告 -->
+  <div class="panel" id="panel-report">
+    <div class="card">
+      <div class="run-form">
+        <div class="field">
+          <label>选择一次跑分</label>
+          <select id="reportRunSelect"><option value="">加载中…</option></select>
+        </div>
+        <button class="btn-primary" onclick="loadReport()">生成分析</button>
+        <button class="btn-secondary" onclick="exportReport()">导出HTML</button>
+      </div>
+      <div class="hint">分析报告不重新跑评测，只读已有的命中结果。导出的 HTML 是独立文件，可以直接发给别人看。</div>
+    </div>
+    <div id="reportStatus" class="status"></div>
+    <div id="reportBody"></div>
   </div>
 </div>
 
 <script>
-let state = null; // 完整的 rules_config.json 内容
+let state = null;
+const loaded = {};
 
-/* ---------- Tab 切换 ---------- */
 function switchTab(tab) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
-  document.getElementById('panel-rules').classList.toggle('active', tab === 'rules');
-  document.getElementById('panel-run').classList.toggle('active', tab === 'run');
-  if (tab === 'run' && !window.__datasetsLoaded) loadDatasets();
+  ['rules','run','hits','report'].forEach(t =>
+    document.getElementById('panel-' + t).classList.toggle('active', t === tab));
+  if (tab === 'run' && !loaded.datasets) loadDatasets();
+  if (tab === 'hits' && !loaded.runs) loadRuns();
+  if (tab === 'report' && !loaded.reportRuns) loadReportRuns();
 }
 
-/* ---------- Tab 1: 规则配置（逻辑不变，从旧版原样搬过来） ---------- */
+function pct(v) { return (v === null || v === undefined) ? '-' : (v * 100).toFixed(0) + '%'; }
+function escapeHtml(s) { return String(s === null || s === undefined ? '' : s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+function escapeAttr(s) { return escapeHtml(s).replace(/"/g, '&quot;'); }
+
+/* ---------- ① 规则配置 ---------- */
 async function loadRules() {
   const res = await fetch('/api/rules');
   state = await res.json();
@@ -148,8 +188,7 @@ async function loadRules() {
 function render() {
   const container = document.getElementById('cards');
   container.innerHTML = '';
-  const ids = Object.keys(state.categories).sort();
-  ids.forEach(id => container.appendChild(renderCard(id)));
+  Object.keys(state.categories).sort().forEach(id => container.appendChild(renderCard(id)));
 }
 
 function renderCard(id) {
@@ -184,18 +223,17 @@ function renderCard(id) {
     </div>
     <div class="field">
       <label>违规示例（examples，每行一条）</label>
-      <textarea data-field="examples">${escapeHtml((cat.examples || []).join('\\n'))}</textarea>
+      <textarea data-field="examples">${escapeHtml((cat.examples || []).join('\n'))}</textarea>
       <div class="hint">典型的、明确命中这条规则的例句，帮LLM建立"什么样算违规"的感觉</div>
     </div>
     <div class="field">
       <label>边界示例（boundary_examples，每行一条）</label>
-      <textarea data-field="boundary_examples">${escapeHtml((cat.boundary_examples || []).join('\\n'))}</textarea>
+      <textarea data-field="boundary_examples">${escapeHtml((cat.boundary_examples || []).join('\n'))}</textarea>
       <div class="hint">看起来沾边、但其实不应该命中这条规则的例句，帮LLM避免误判/误伤</div>
     </div>
     <div class="card-actions">
       <button class="btn-danger" onclick="deleteCategory('${id}')">删除此类目</button>
-    </div>
-  `;
+    </div>`;
   div.querySelectorAll('[data-field]').forEach(el => {
     el.addEventListener('input', () => syncFieldToState(id, el));
   });
@@ -216,12 +254,9 @@ function addCategory() {
   if (!id) return;
   if (state.categories[id]) { alert('这个编号已经存在了'); return; }
   state.categories[id] = {
-    name: '新规则',
-    risk_level: 'Medium',
-    action: state.action_space && state.action_space[1] || 'PassWithNotice',
-    description: '',
-    examples: [],
-    boundary_examples: []
+    name: '新规则', risk_level: 'Medium',
+    action: (state.action_space && state.action_space[1]) || 'PassWithNotice',
+    description: '', examples: [], boundary_examples: []
   };
   render();
 }
@@ -233,45 +268,42 @@ function deleteCategory(id) {
 }
 
 async function saveAll() {
-  const statusEl = document.getElementById('rulesStatus');
-  statusEl.textContent = '保存中…';
-  statusEl.className = 'status';
+  const el = document.getElementById('rulesStatus');
+  el.textContent = '保存中…'; el.className = 'status';
   try {
     const res = await fetch('/api/rules', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(state)
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || '保存失败');
-    statusEl.textContent = '已保存 ' + new Date().toLocaleTimeString();
-    statusEl.className = 'status ok';
+    el.textContent = '已保存 ' + new Date().toLocaleTimeString();
+    el.className = 'status ok';
   } catch (e) {
-    statusEl.textContent = '保存失败：' + e.message;
-    statusEl.className = 'status err';
+    el.textContent = '保存失败：' + e.message; el.className = 'status err';
   }
 }
 
-/* ---------- Tab 2: 规则执行 ---------- */
+/* ---------- ② 规则执行 ---------- */
 async function loadDatasets() {
-  window.__datasetsLoaded = true;
-  const llmNote = document.getElementById('llmNote');
+  loaded.datasets = true;
+  const note = document.getElementById('llmNote');
   try {
     const res = await fetch('/api/datasets');
     const data = await res.json();
     if (data.has_api_key) {
-      llmNote.textContent = '当前 LLM 运行时：' + data.llm_runtime;
-      llmNote.className = 'llm-note ok';
+      note.textContent = '当前 LLM 运行时：' + data.llm_runtime;
+      note.className = 'llm-note ok';
     } else {
-      llmNote.textContent = '没有检测到 LLM key：请停掉 server.py，在终端里 export DEEPSEEK_API_KEY="你的key" 后重新启动';
-      llmNote.className = 'llm-note err';
+      note.textContent = '没有检测到 LLM key：请停掉 server.py，在终端里 export DEEPSEEK_API_KEY="你的key" 后重新启动';
+      note.className = 'llm-note err';
     }
-    const csv50 = data.presets.find(p => p.key === 'csv50');
-    document.getElementById('datasetHint').textContent =
-      csv50 && !csv50.exists ? `注意：默认CSV50路径不存在（${csv50.path}）` : '';
+    const sel = document.getElementById('datasetSelect');
+    sel.innerHTML = (data.datasets || []).map(d =>
+      `<option value="${escapeAttr(d.key)}">${escapeHtml(d.label)}</option>`).join('')
+      + '<option value="custom">自定义路径…</option>';
   } catch (e) {
-    llmNote.textContent = '检查失败：' + e.message;
-    llmNote.className = 'llm-note err';
+    note.textContent = '检查失败：' + e.message; note.className = 'llm-note err';
   }
 }
 
@@ -284,89 +316,277 @@ async function runEval() {
   const dataset = document.getElementById('datasetSelect').value;
   const customPath = document.getElementById('customPathInput').value.trim();
   const workers = parseInt(document.getElementById('workersInput').value, 10) || 1;
-  const runBtn = document.getElementById('runBtn');
-  const statusEl = document.getElementById('runStatus');
-  const resultsEl = document.getElementById('runResults');
+  const btn = document.getElementById('runBtn');
+  const el = document.getElementById('runStatus');
+  const out = document.getElementById('runResults');
 
   if (dataset === 'custom' && !customPath) {
-    statusEl.textContent = '请先填写自定义数据集的文件路径';
-    statusEl.className = 'status err';
-    return;
+    el.textContent = '请先填写自定义数据集的文件路径'; el.className = 'status err'; return;
   }
 
-  runBtn.disabled = true;
-  statusEl.textContent = '运行中…数据集越大越慢，CSV50/300 case 可能要几分钟，请耐心等待';
-  statusEl.className = 'status';
-  resultsEl.innerHTML = '';
+  btn.disabled = true;
+  el.textContent = '运行中…数据集越大越慢，200条可能要几分钟，请耐心等待';
+  el.className = 'status'; out.innerHTML = '';
 
   try {
     const res = await fetch('/api/run', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ dataset, custom_path: customPath || null, workers })
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || '运行失败');
-    statusEl.textContent = `完成：${data.dataset_label}　结果已保存到 ${data.results_file}`;
-    statusEl.className = 'status ok';
-    renderResults(data);
+    el.textContent = `完成：${data.dataset_label}　结果已存为 ${data.run_id}`;
+    el.className = 'status ok';
+    renderRunResults(data);
+    loaded.runs = false; loaded.reportRuns = false;
   } catch (e) {
-    statusEl.textContent = '运行失败：' + e.message;
-    statusEl.className = 'status err';
+    el.textContent = '运行失败：' + e.message; el.className = 'status err';
   } finally {
-    runBtn.disabled = false;
+    btn.disabled = false;
   }
 }
 
-function renderResults(data) {
+function renderRunResults(data) {
   const s = data.summary;
-  const pct = v => (v === null || v === undefined) ? '-' : (v * 100).toFixed(0) + '%';
-  const metricsHtml = `
-    <div class="metrics">
-      <div class="metric"><div class="label">总用例数</div><div class="value">${s.total}</div></div>
-      <div class="metric"><div class="label">成功跑完 / 报错</div><div class="value">${s.tested} / ${s.errored}</div></div>
-      <div class="metric"><div class="label">整体类别准确率</div><div class="value">${pct(s.overall_exact_category_accuracy)}</div></div>
-      <div class="metric"><div class="label">高危类 Recall</div><div class="value">${pct(s.critical_recall_release_gate)}</div></div>
-      <div class="metric"><div class="label">中危类 Precision</div><div class="value">${pct(s.medium_precision_release_gate)}</div></div>
-      <div class="metric"><div class="label">低危误报率</div><div class="value">${pct(s.low_false_positive_rate_release_gate)}</div></div>
-    </div>
-  `;
-
-  const failedAndErrored = data.results.filter(r => !r.exact_category || r.status !== 'OK');
-  let tableHtml = '<div class="card"><strong>失败 / 报错详情（' + failedAndErrored.length + ' 条）</strong>';
-  if (failedAndErrored.length) {
-    tableHtml += `
-      <table>
-        <thead><tr><th>ID</th><th>输入</th><th>期望</th><th>实际</th><th>状态</th></tr></thead>
-        <tbody>
-          ${failedAndErrored.slice(0, 50).map(r => `
-            <tr>
-              <td>${escapeHtml(r.id || '')}</td>
-              <td>${escapeHtml((r.text || '').slice(0, 40))}</td>
-              <td>${escapeHtml(r.expected_category || '')}</td>
-              <td>${escapeHtml(r.actual_category || '-')}</td>
-              <td>${r.status === 'OK'
-                ? '<span class="tag tag-fail">类别不符</span>'
-                : `<span class="tag tag-error">${escapeHtml(r.status)}</span>`}</td>
-            </tr>
-          `).join('')}
-        </tbody>
-      </table>
-      ${failedAndErrored.length > 50 ? `<div class="hint">只显示前50条，完整结果见 ${escapeHtml(data.results_file || '')}</div>` : ''}
-    `;
-  } else {
-    tableHtml += '<div class="hint">全部通过，没有失败或报错的case</div>';
+  let html = '';
+  if (data.data_issues && data.data_issues.length) {
+    html += `<div class="warn"><strong>数据质量提示（${data.data_issues.length} 条）</strong><ul style="margin:6px 0 0;padding-left:18px">`
+      + data.data_issues.map(i => `<li>${escapeHtml(i.case_id)}：${escapeHtml(i.problem)}</li>`).join('')
+      + `</ul></div>`;
   }
-  tableHtml += '</div>';
+  html += `<div class="metrics">
+      <div class="metric"><div class="label">总用例数</div><div class="value">${s.total}</div></div>
+      <div class="metric"><div class="label">成功 / 报错</div><div class="value">${s.tested} / ${s.errored}</div></div>
+      <div class="metric"><div class="label">整体类别准确率</div><div class="value">${pct(s.overall_exact_category_accuracy)}</div></div>
+      <div class="metric"><div class="label">高危 Recall</div><div class="value">${pct(s.critical_recall_release_gate)}</div></div>
+      <div class="metric"><div class="label">中危 Precision</div><div class="value">${pct(s.medium_precision_release_gate)}</div></div>
+      <div class="metric"><div class="label">低危误报率</div><div class="value">${pct(s.low_false_positive_rate_release_gate)}</div></div>
+    </div>`;
 
-  document.getElementById('runResults').innerHTML = metricsHtml + tableHtml;
+  const bad = data.results.filter(r => !r.exact_category || r.status !== 'OK');
+  html += `<div class="card"><strong>失败 / 报错详情（${bad.length} 条）</strong>`;
+  html += bad.length ? resultsTable(bad.slice(0, 50)) : '<div class="empty">全部通过，没有失败或报错的case</div>';
+  if (bad.length > 50) html += `<div class="hint">只显示前50条，完整结果见 命中结果/hits_${escapeHtml(data.run_id)}.json</div>`;
+  html += `</div><div class="hint">想看根因分桶和跟上次的对比，去「④ 分析报告」tab 选这次跑分。</div>`;
+  document.getElementById('runResults').innerHTML = html;
 }
 
-function escapeHtml(s) {
-  return String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+function resultsTable(rows) {
+  return `<table><thead><tr><th>ID</th><th>输入</th><th>期望</th><th>实际</th><th>状态</th></tr></thead><tbody>`
+    + rows.map(r => `<tr>
+        <td>${escapeHtml(r.id)}</td>
+        <td>${escapeHtml((r.text || '').slice(0, 40))}</td>
+        <td>${escapeHtml(r.expected_category)}</td>
+        <td>${escapeHtml(r.actual_category || '-')}</td>
+        <td>${r.status === 'OK'
+          ? (r.exact_category ? '<span class="tag tag-ok">通过</span>' : '<span class="tag tag-fail">类别不符</span>')
+          : `<span class="tag tag-error">${escapeHtml(String(r.status).slice(0, 60))}</span>`}</td>
+      </tr>`).join('') + '</tbody></table>';
 }
-function escapeAttr(s) {
-  return escapeHtml(s).replace(/"/g, '&quot;');
+
+/* ---------- ③ 命中结果 ---------- */
+async function loadRuns() {
+  loaded.runs = true;
+  const box = document.getElementById('runsList');
+  document.getElementById('runDetail').innerHTML = '';
+  box.className = 'loading'; box.textContent = '加载中…';
+  try {
+    const res = await fetch('/api/runs');
+    const data = await res.json();
+    const runs = data.runs || [];
+    if (!runs.length) {
+      box.className = 'card';
+      box.innerHTML = '<div class="empty">还没有任何跑分记录。去「② 规则执行」跑一次评测，结果会自动存到这里。</div>';
+      return;
+    }
+    box.className = 'card';
+    box.innerHTML = `<strong>历史跑分（${runs.length} 次，最新在上）</strong>
+      <table><thead><tr><th>时间</th><th>数据集</th><th>条数</th><th>报错</th><th>类别准确率</th><th>高危Recall</th><th></th></tr></thead><tbody>`
+      + runs.map(r => r.error
+        ? `<tr><td colspan="7">${escapeHtml(r.file)}：${escapeHtml(r.error)}</td></tr>`
+        : `<tr class="clickable" onclick="showRunDetail('${escapeAttr(r.run_id)}')">
+            <td>${escapeHtml((r.started_at || '').replace('T', ' '))}</td>
+            <td>${escapeHtml(r.dataset_label)}</td>
+            <td>${r.total}</td>
+            <td>${r.errored}</td>
+            <td>${pct(r.overall_exact_category_accuracy)}</td>
+            <td>${pct(r.critical_recall)}</td>
+            <td><span class="btn-secondary btn-sm" style="border-radius:8px;padding:3px 9px;font-size:12px">查看</span></td>
+          </tr>`).join('') + '</tbody></table>';
+  } catch (e) {
+    box.className = 'card'; box.innerHTML = `<div class="status err">加载失败：${escapeHtml(e.message)}</div>`;
+  }
+}
+
+async function showRunDetail(runId) {
+  const box = document.getElementById('runDetail');
+  box.innerHTML = '<div class="loading">加载中…</div>';
+  try {
+    const res = await fetch('/api/runs/' + encodeURIComponent(runId));
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || '加载失败');
+    window.__currentRun = data;
+    renderRunDetail('all');
+  } catch (e) {
+    box.innerHTML = `<div class="status err">加载失败：${escapeHtml(e.message)}</div>`;
+  }
+}
+
+function renderRunDetail(filter) {
+  const data = window.__currentRun;
+  if (!data) return;
+  const all = data.results || [];
+  const failed = all.filter(r => r.status === 'OK' && !r.exact_category);
+  const errored = all.filter(r => r.status !== 'OK');
+  const passed = all.filter(r => r.status === 'OK' && r.exact_category);
+  const shown = filter === 'failed' ? failed : filter === 'errored' ? errored
+    : filter === 'passed' ? passed : all;
+
+  const btn = (key, label, n) =>
+    `<button class="${filter === key ? 'btn-primary' : 'btn-secondary'} btn-sm" onclick="renderRunDetail('${key}')">${label}（${n}）</button>`;
+
+  document.getElementById('runDetail').innerHTML = `
+    <div class="card">
+      <div class="card-head">
+        <div><strong>${escapeHtml(data.dataset_label)}</strong>
+          <span class="hint">　${escapeHtml((data.started_at || '').replace('T',' '))}　·　${escapeHtml(data.summary && data.summary.model)}</span></div>
+      </div>
+      <div class="toolbar">
+        ${btn('all','全部',all.length)} ${btn('failed','类别不符',failed.length)}
+        ${btn('errored','报错',errored.length)} ${btn('passed','通过',passed.length)}
+      </div>
+      ${shown.length ? resultsTable(shown.slice(0, 100)) : '<div class="empty">这一类没有case</div>'}
+      ${shown.length > 100 ? `<div class="hint">只显示前100条，完整结果见 命中结果/hits_${escapeHtml(data.run_id)}.json</div>` : ''}
+    </div>`;
+}
+
+/* ---------- ④ 分析报告 ---------- */
+async function loadReportRuns() {
+  loaded.reportRuns = true;
+  const sel = document.getElementById('reportRunSelect');
+  try {
+    const res = await fetch('/api/runs');
+    const runs = (await res.json()).runs || [];
+    if (!runs.length) {
+      sel.innerHTML = '<option value="">还没有跑分记录</option>';
+      document.getElementById('reportStatus').textContent = '先去「② 规则执行」跑一次评测。';
+      return;
+    }
+    sel.innerHTML = runs.filter(r => !r.error).map(r =>
+      `<option value="${escapeAttr(r.run_id)}">${escapeHtml((r.started_at||'').replace('T',' '))}　${escapeHtml(r.dataset_label)}（${r.total}条）</option>`
+    ).join('');
+  } catch (e) {
+    sel.innerHTML = '<option value="">加载失败</option>';
+  }
+}
+
+async function loadReport() {
+  const runId = document.getElementById('reportRunSelect').value;
+  const el = document.getElementById('reportStatus');
+  if (!runId) { el.textContent = '请先选择一次跑分'; el.className = 'status err'; return; }
+  el.textContent = '生成中…'; el.className = 'status';
+  try {
+    const res = await fetch('/api/report/' + encodeURIComponent(runId));
+    const rep = await res.json();
+    if (!res.ok) throw new Error(rep.error || '生成失败');
+    el.textContent = ''; renderReport(rep);
+  } catch (e) {
+    el.textContent = '生成失败：' + e.message; el.className = 'status err';
+  }
+}
+
+async function exportReport() {
+  const runId = document.getElementById('reportRunSelect').value;
+  const el = document.getElementById('reportStatus');
+  if (!runId) { el.textContent = '请先选择一次跑分'; el.className = 'status err'; return; }
+  el.textContent = '导出中…'; el.className = 'status';
+  try {
+    const res = await fetch('/api/report/' + encodeURIComponent(runId) + '?export=1');
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || '导出失败');
+    el.textContent = '已导出：' + data.export_path; el.className = 'status ok';
+    renderReport(data.report);
+  } catch (e) {
+    el.textContent = '导出失败：' + e.message; el.className = 'status err';
+  }
+}
+
+function renderReport(rep) {
+  const h = rep.headline, ins = rep.in_scope, fb = rep.failure_buckets;
+  let html = `<div class="metrics">
+      <div class="metric"><div class="label">总用例数</div><div class="value">${h.total}</div></div>
+      <div class="metric"><div class="label">成功 / 报错</div><div class="value">${h.tested} / ${h.errored}</div></div>
+      <div class="metric"><div class="label">整体类别准确率</div><div class="value">${pct(h.overall_exact_category_accuracy)}</div></div>
+      <div class="metric"><div class="label">高危 Recall</div><div class="value">${pct(h.critical_recall)}</div></div>
+      <div class="metric"><div class="label">中危 Precision</div><div class="value">${pct(h.medium_precision)}</div></div>
+      <div class="metric"><div class="label">低危误报率</div><div class="value">${pct(h.low_fp_rate)}</div></div>
+    </div>`;
+
+  html += `<div class="callout">
+      <p><strong>只看范围内的真实水平：${pct(ins.accuracy)}</strong>（${ins.correct} / ${ins.tested} 条已测）</p>
+      <p class="note">${escapeHtml(ins.note)}</p>
+    </div>`;
+
+  const bucket = (key, title) => {
+    const b = fb[key];
+    let s = `<div class="card"><div class="bucket-head"><h3>${title}</h3><strong>${b.count} 条</strong></div>
+      <p class="bucket-meaning">${escapeHtml(b.meaning)}</p>
+      <p class="bucket-action"><strong>该怎么办：</strong>${escapeHtml(b.action)}</p>`;
+    if (b.reasons && Object.keys(b.reasons).length) {
+      s += '<ul style="margin:0 0 8px;padding-left:18px;font-size:13px">'
+        + Object.entries(b.reasons).map(([k, v]) => `<li>${escapeHtml(k)}：${v} 条</li>`).join('') + '</ul>';
+    }
+    if (b.cases && b.cases.length) {
+      s += `<table><thead><tr><th>ID</th><th>输入</th><th>期望</th><th>实际</th><th>模型理由 / 报错</th></tr></thead><tbody>`
+        + b.cases.map(c => `<tr>
+            <td>${escapeHtml(c.id)}</td>
+            <td>${escapeHtml((c.text || '').slice(0, 46))}</td>
+            <td>${escapeHtml(c.expected_category)}</td>
+            <td>${escapeHtml(c.actual_category || '-')}</td>
+            <td>${escapeHtml((c.actual_rationale || c.status || '').slice(0, 90))}</td>
+          </tr>`).join('') + '</tbody></table>';
+    } else {
+      s += '<div class="empty">这一桶是空的</div>';
+    }
+    return s + '</div>';
+  };
+
+  html += '<h2 style="font-size:18px;margin:20px 0 10px">失败根因分桶</h2>';
+  html += bucket('real_miss', '范围内真实误判');
+  html += bucket('runtime_error', '调用/解析层报错');
+  html += bucket('out_of_scope', '未实现类别的自然miss');
+
+  html += `<div class="card"><strong>按类别拆解</strong>
+    <table><thead><tr><th>类别</th><th>名称</th><th>状态</th><th>条数</th><th>判对</th><th>准确率</th></tr></thead><tbody>`
+    + rep.category_breakdown.map(c => `<tr>
+        <td>${escapeHtml(c.category)}</td><td>${escapeHtml(c.name)}</td>
+        <td>${c.implemented ? '<span class="tag tag-ok">已实现</span>' : '<span class="tag tag-scope">未实现</span>'}</td>
+        <td>${c.total}</td><td>${c.correct}</td><td>${pct(c.accuracy)}</td>
+      </tr>`).join('') + '</tbody></table></div>';
+
+  if (rep.comparison) {
+    const c = rep.comparison;
+    const row = (label, d) => {
+      if (d.before === null || d.before === undefined || d.now === null || d.now === undefined) return '';
+      const isFloat = typeof d.now === 'number' && !Number.isInteger(d.now);
+      const now = isFloat ? pct(d.now) : d.now;
+      const before = isFloat ? pct(d.before) : d.before;
+      const delta = isFloat ? (d.delta * 100).toFixed(0) + 'pp' : d.delta;
+      const sign = d.delta > 0 ? '+' : '';
+      return `<tr><td>${label}</td><td>${before}</td><td>${now}</td><td>${sign}${delta}</td></tr>`;
+    };
+    html += `<div class="card"><strong>跟上次比</strong>
+      <div class="hint">对比对象：同一数据集的上一次跑分 ${escapeHtml(c.previous_run_id)}（${escapeHtml((c.previous_started_at||'').replace('T',' '))}）</div>
+      <table><thead><tr><th>指标</th><th>上次</th><th>这次</th><th>变化</th></tr></thead><tbody>
+        ${row('整体类别准确率', c.overall_exact_category_accuracy)}
+        ${row('高危Recall', c.critical_recall)}
+        ${row('报错数', c.errored)}
+      </tbody></table></div>`;
+  } else {
+    html += '<div class="hint">这是该数据集的第一次跑分，还没有可对比的历史记录。再跑一次就会自动出现对比。</div>';
+  }
+
+  document.getElementById('reportBody').innerHTML = html;
 }
 
 loadRules();
