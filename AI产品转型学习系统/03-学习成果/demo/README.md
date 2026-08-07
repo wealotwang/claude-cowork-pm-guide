@@ -1,12 +1,12 @@
 # Demo：AI Compliance Check Assistant（Day05-07 最小可运行原型）
 
-更新时间：2026-08-06（Day07 深挖 300 case 后，去掉了 regex 前置层，改为纯 LLM 判断）
+更新时间：2026-08-07（**这个demo文件夹整体已归档。规则配置迁移到 [`../../05-产品原型/规则配置/`](../../05-产品原型/规则配置/)，核心引擎和评测脚本（checker.py / eval_cases.json / run_eval.py / run_eval_csv.py）迁移到 [`../../05-产品原型/规则执行/`](../../05-产品原型/规则执行/)，逻辑完全没变，只是文件位置换了。以后要跑demo，请去新位置跑**，详见 [`../../05-产品原型/README.md`](../../05-产品原型/README.md)）
 
 ---
 
 ## 这是什么
 
-Day05 设计、Day06 接入 DeepSeek 跑通验证的最小 demo，Day07 进入评测驱动迭代。**当前实际生效的是 6 类风险子集**，以 `../Day06-用户规则配置模板-v2.2.json` 为准：
+Day05 设计、Day06 接入 DeepSeek 跑通验证的最小 demo，Day07 进入评测驱动迭代，并把产品文件从day编号的历史文件迁移到统一的 `05-产品原型/` 文件夹。**当前实际生效的是 6 类风险子集**，规则定义唯一来源现在是 [`../../05-产品原型/规则配置/rules_config.json`](../../05-产品原型/规则配置/rules_config.json)（可以用同目录下的 `server.py` 起个本地网页可视化编辑，不用手改JSON）：
 
 | 类别 | 名称 | 风险等级 | 处置动作 | 判断方式 |
 |---|---|---|---|---|
@@ -29,19 +29,21 @@ Day04/Day06 时的判断是：05类隐私信息（身份证号、手机号）格
 
 代价：05 类失去了"不花 token、100% 确定性匹配"的优势，换来的是"整个系统只有一种判断方式，配置规则的人完全不用碰任何代码"。详细决策过程见 [Day07-架构调整-去掉regex改纯LLM.md](../Day07-架构调整-去掉regex改纯LLM.md)。
 
-Day06 定下的三层拆分仍然成立，只是第三层现在是空的：
-- **固定 system prompt**（`../Day06-System-Prompt-固定模板.md`）：系统角色、输入输出格式、判断原则，基本不改
-- **用户规则配置**（`../Day06-用户规则配置模板-v2.2.json`）：规则说明、违规示例、边界示例、动作——这是唯一要动的文件，纯自然语言，不含任何代码/正则
-- **内部实现增强**：Day07 起已清空，历史上 05 类曾有的 regex 层见 `../Day06-内部实现说明-v1.md`（保留作历史记录，不代表当前状态）
+Day06 定下的三层拆分仍然成立，只是第三层现在是空的，且文件位置已经迁移（2026-08-07）：
+- **固定 system prompt**（`../../05-产品原型/规则配置/system_prompt.md`）：系统角色、输入输出格式、判断原则，基本不改
+- **用户规则配置**（`../../05-产品原型/规则配置/rules_config.json`）：规则说明、违规示例、边界示例、动作——这是唯一要动的文件，纯自然语言，不含任何代码/正则，可以用 `../../05-产品原型/规则配置/server.py` 起本地网页编辑
+- **内部实现增强**：Day07 起已清空，说明文档见 `../../05-产品原型/规则配置/内部实现说明.md`
 
-## 文件说明
+旧的 `../Day06-用户规则配置模板-v2.2.json`、`../Day06-System-Prompt-固定模板.md`、`../Day06-内部实现说明-v1.md` 仍然保留，但已标注"已归档"，不再是当前生效版本，只作历史记录。
 
-- `checker.py` —— 核心引擎：`llm_classify()` 处理全部 6 类的语义判断，`classify()` 是统一入口，优先走 DeepSeek，没配置则退回 Anthropic。也可以直接当 CLI 用。
-- `../Day06-用户规则配置模板-v2.2.json` —— 规则定义唯一来源（**注意：不再是本目录下的 `rules_config.json`，后者现在只是镜像/兼容文件，不是主来源**）。
-- `../Day06-System-Prompt-固定模板.md` —— 固定 system prompt。
-- `../Day06-内部实现说明-v1.md` —— Day06 时期内部实现层的说明文档（历史记录，regex 已在 Day07 移除）。
-- `eval_cases.json` —— MVP 子集评测，约30条，覆盖违规/边界/near-miss/已知局限四种类型（`expected_action` 字段还是 Day05 时期的旧动作名，不影响跑分——`run_eval.py` 只比对类别，不比对动作名，但迟早该更新成新名字）。
-- `run_eval.py` —— 跑 eval_cases.json（MVP子集），按高危类看 Recall、中低危/合规类看误报率分开算指标。Day07起去掉regex后，所有case都需要API key才能跑。
+## 文件说明（历史快照，本目录下这些文件都已归档，仅供查阅当时的实现）
+
+- `checker.py` —— 核心引擎：`llm_classify()` 处理全部 6 类的语义判断，`classify()` 是统一入口，优先走 DeepSeek，没配置则退回 Anthropic。也可以直接当 CLI 用。**已迁移至 `../../05-产品原型/规则执行/checker.py`**。
+- `../../05-产品原型/规则配置/rules_config.json` —— 规则定义唯一来源（本目录下的 `rules_config.json` 只是Day06时期的镜像/兼容文件，不是主来源，也不是当前脚本读取的对象）。
+- `../../05-产品原型/规则配置/system_prompt.md` —— 固定 system prompt。
+- `../../05-产品原型/规则配置/内部实现说明.md` —— 内部实现层说明文档，按当前真实状态维护（无regex、有重试逻辑）。
+- `eval_cases.json` —— MVP 子集评测，约30条，覆盖违规/边界/near-miss/已知局限四种类型（`expected_action` 字段还是 Day05 时期的旧动作名，不影响跑分——`run_eval.py` 只比对类别，不比对动作名，但迟早该更新成新名字）。**已迁移至 `../../05-产品原型/规则执行/eval_cases.json`**。
+- `run_eval.py` —— 跑 eval_cases.json（MVP子集），按高危类看 Recall、中低危/合规类看误报率分开算指标。Day07起去掉regex后，所有case都需要API key才能跑。**已迁移至 `../../05-产品原型/规则执行/run_eval.py`**。
 - `run_eval_csv.py` —— 跑 CSV benchmark。现在除了仓库根目录的 `medical_crm_compliance_eval_dataset_cn.csv`，也支持直接传入更大的外部 CSV（例如 Day07 的 300 case）。已支持：
   - `分类ID` 自动补零
   - 忽略或可选处理 `预期动作`
@@ -49,12 +51,14 @@ Day06 定下的三层拆分仍然成立，只是第三层现在是空的：
   - `--progress-every` 进度输出
   - `--results-out` 逐条结果落盘
 
-## 怎么跑
+  **已迁移至 `../../05-产品原型/规则执行/run_eval_csv.py`**。
+
+## 怎么跑（请去新位置跑，下面命令仅作历史参考）
 
 ```bash
 export DEEPSEEK_API_KEY=”你的key”   # Day06起默认优先走DeepSeek；没设置也支持ANTHROPIC_API_KEY兜底
 
-cd 03-学习成果/demo
+cd "05-产品原型/规则执行"
 python3 checker.py “这个月表现不错，给你包个红包”   # 单条测试
 python3 run_eval.py                                # MVP子集评测
 python3 run_eval_csv.py                             # 完整CSV50压力测试

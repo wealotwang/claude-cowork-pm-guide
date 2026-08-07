@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """
-用完整 50 条 CSV benchmark 跑一次当前 demo，并输出更贴近 Release Gate 的结果。
+用完整 50 条 CSV benchmark（或任意外部 CSV，如 Day07 的 300 case）跑一次当前 demo，
+并输出更贴近 Release Gate 的结果。
 
-【已归档，不再是当前生效版本】当前生效版本已迁移至 ../../05-产品原型/规则执行/run_eval_csv.py
-（逻辑完全一致），这份文件保留作为历史快照，不建议再从这里运行。
+迁移说明：从 03-学习成果/demo/run_eval_csv.py 迁移而来（原文件已归档，标注指向这里），
+逻辑未改动。
 
 默认数据集：
     /Users/li/ai pm learning/claude-cowork-pm-guide/medical_crm_compliance_eval_dataset_cn.csv
@@ -11,6 +12,7 @@
 用法：
     export DEEPSEEK_API_KEY="你的key"
     python3 run_eval_csv.py
+    python3 run_eval_csv.py /path/to/300case.csv --workers 4 --progress-every 20 --results-out out.jsonl
 """
 
 import argparse

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>规则配置 · AI Compliance Check Assistant</title>
+<!-- 【已归档，不再是当前生效版本】当前生效版本是 ../index.html（合规工作台，含规则配置+规则执行两个tab），配套后端是 ../server.py。这份文件保留作为Module 1单独开发阶段的历史快照。 -->
+<style>
+  :root {
+    --bg: #f5f7fb; --card: #fff; --line: #e5e7eb; --text: #1f2937; --muted: #6b7280;
+    --blue: #2563eb; --green: #047857; --orange: #b45309; --red: #b91c1c;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 24px; background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Segoe UI", sans-serif; line-height: 1.6; }
+  .wrap { max-width: 980px; margin: 0 auto; }
+  .hero { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 20px; margin-bottom: 18px; }
+  .hero h1 { margin: 0 0 6px; font-size: 24px; }
+  .hero p { margin: 0; color: var(--muted); font-size: 14px; }
+  .toolbar { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+  button { border: none; border-radius: 10px; padding: 10px 16px; font-size: 14px; font-weight: 600;
+    cursor: pointer; }
+  .btn-primary { background: var(--blue); color: #fff; }
+  .btn-secondary { background: #eef2ff; color: #3730a3; }
+  .btn-danger { background: #fef2f2; color: var(--red); }
+  .btn-primary:hover, .btn-secondary:hover, .btn-danger:hover { opacity: 0.85; }
+  .status { font-size: 13px; color: var(--muted); }
+  .status.ok { color: var(--green); }
+  .status.err { color: var(--red); }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px; margin-bottom: 14px; }
+  .card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
+  .card-head .id-badge { display: inline-block; background: #eef2ff; color: #3730a3; border-radius: 999px;
+    padding: 3px 10px; font-size: 12px; font-weight: 700; margin-right: 8px; }
+  .field { margin-bottom: 10px; }
+  .field label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; font-weight: 600; }
+  .field input, .field select, .field textarea { width: 100%; border: 1px solid var(--line); border-radius: 8px;
+    padding: 8px 10px; font-size: 14px; font-family: inherit; }
+  .field textarea { min-height: 64px; resize: vertical; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .card-actions { display: flex; gap: 8px; margin-top: 10px; }
+  .hint { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .action-space-note { font-size: 12px; color: var(--muted); margin-bottom: 14px; }
+  #loading { color: var(--muted); padding: 20px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <h1>规则配置</h1>
+    <p>合规工作台四个模块之一：这里改的是唯一生效的规则配置（<code>rules_config.json</code>），保存后 checker.py / 评测脚本直接读到最新内容。改的是"规则说明+违规示例+边界示例"这些自然语言内容，不需要写任何代码。</p>
+  </div>
+
+  <div class="toolbar">
+    <button class="btn-secondary" onclick="addCategory()">+ 新增类目</button>
+    <button class="btn-primary" onclick="saveAll()">保存全部改动</button>
+    <span id="status" class="status"></span>
+  </div>
+  <div class="action-space-note" id="actionSpaceNote"></div>
+
+  <div id="loading">加载中…</div>
+  <div id="cards"></div>
+</div>
+
+<script>
+let state = null; // 完整的 rules_config.json 内容
+
+async function loadRules() {
+  const res = await fetch('/api/rules');
+  state = await res.json();
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('actionSpaceNote').textContent =
+    '当前允许的动作（action_space）：' + (state.action_space || []).join(' / ') +
+    '　默认通过类目：' + state.default_rule_id;
+  render();
+}
+
+function render() {
+  const container = document.getElementById('cards');
+  container.innerHTML = '';
+  const ids = Object.keys(state.categories).sort();
+  ids.forEach(id => container.appendChild(renderCard(id)));
+}
+
+function renderCard(id) {
+  const cat = state.categories[id];
+  const div = document.createElement('div');
+  div.className = 'card';
+  div.innerHTML = `
+    <div class="card-head">
+      <div><span class="id-badge">${id}</span><strong>${escapeHtml(cat.name || '')}</strong></div>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>规则名称</label>
+        <input type="text" data-field="name" value="${escapeAttr(cat.name || '')}">
+      </div>
+      <div class="field">
+        <label>风险等级</label>
+        <select data-field="risk_level">
+          ${['Critical','Medium','Low'].map(r => `<option value="${r}" ${cat.risk_level===r?'selected':''}>${r}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <label>命中后动作</label>
+      <select data-field="action">
+        ${(state.action_space || []).map(a => `<option value="${a}" ${cat.action===a?'selected':''}>${a}</option>`).join('')}
+      </select>
+    </div>
+    <div class="field">
+      <label>规则说明（description，纯自然语言，这是LLM判断的主要依据）</label>
+      <textarea data-field="description">${escapeHtml(cat.description || '')}</textarea>
+    </div>
+    <div class="field">
+      <label>违规示例（examples，每行一条）</label>
+      <textarea data-field="examples">${escapeHtml((cat.examples || []).join('\\n'))}</textarea>
+      <div class="hint">典型的、明确命中这条规则的例句，帮LLM建立"什么样算违规"的感觉</div>
+    </div>
+    <div class="field">
+      <label>边界示例（boundary_examples，每行一条）</label>
+      <textarea data-field="boundary_examples">${escapeHtml((cat.boundary_examples || []).join('\\n'))}</textarea>
+      <div class="hint">看起来沾边、但其实不应该命中这条规则的例句，帮LLM避免误判/误伤</div>
+    </div>
+    <div class="card-actions">
+      <button class="btn-danger" onclick="deleteCategory('${id}')">删除此类目</button>
+    </div>
+  `;
+  div.querySelectorAll('[data-field]').forEach(el => {
+    el.addEventListener('input', () => syncFieldToState(id, el));
+  });
+  return div;
+}
+
+function syncFieldToState(id, el) {
+  const field = el.dataset.field;
+  if (field === 'examples' || field === 'boundary_examples') {
+    state.categories[id][field] = el.value.split('\n').map(s => s.trim()).filter(Boolean);
+  } else {
+    state.categories[id][field] = el.value;
+  }
+}
+
+function addCategory() {
+  const id = prompt('新类目的编号（比如 09，两位数字）：');
+  if (!id) return;
+  if (state.categories[id]) { alert('这个编号已经存在了'); return; }
+  state.categories[id] = {
+    name: '新规则',
+    risk_level: 'Medium',
+    action: state.action_space && state.action_space[1] || 'PassWithNotice',
+    description: '',
+    examples: [],
+    boundary_examples: []
+  };
+  render();
+}
+
+function deleteCategory(id) {
+  if (!confirm(`确定要删除类目 ${id}（${state.categories[id].name}）吗？`)) return;
+  delete state.categories[id];
+  render();
+}
+
+async function saveAll() {
+  const statusEl = document.getElementById('status');
+  statusEl.textContent = '保存中…';
+  statusEl.className = 'status';
+  try {
+    const res = await fetch('/api/rules', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(state)
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || '保存失败');
+    statusEl.textContent = '已保存 ' + new Date().toLocaleTimeString();
+    statusEl.className = 'status ok';
+  } catch (e) {
+    statusEl.textContent = '保存失败：' + e.message;
+    statusEl.className = 'status err';
+  }
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+}
+function escapeAttr(s) {
+  return escapeHtml(s).replace(/"/g, '&quot;');
+}
+
+loadRules();
+</script>
+</body>
+</html>

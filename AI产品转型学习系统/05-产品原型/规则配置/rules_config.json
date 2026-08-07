@@ -1,7 +1,7 @@
 {
   "version": "v2.2",
-  "updated": "2026-08-06",
-  "note": "【已归档，不再是当前生效版本】当前生效的规则配置已迁移至 ../05-产品原型/规则配置/rules_config.json，checker.py 也已改为读取那里。这份文件保留作为Day06-07迭代过程的历史快照，完整改动历史见 ../05-产品原型/CHANGELOG.md。",
+  "updated": "2026-08-07",
+  "note": "这是唯一生效的规则配置文件，从 03-学习成果/Day06-用户规则配置模板-v2.2.json 迁移而来（原文件已归档，标注指向这里，不再是当前生效版本）。不包含 system prompt（见同目录 system_prompt.md），也不暴露内部实现细节（见同目录 内部实现说明.md）。完整改动历史见 ../CHANGELOG.md，不在这里堆积历史note。",
   "default_rule_id": "10",
   "action_space": [
     "Reject",

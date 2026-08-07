@@ -1,37 +1,24 @@
 #!/usr/bin/env python3
 """
-AI Compliance Check Assistant - 最小可运行 demo（Day05/06 产出，Day07 架构调整）
+AI Compliance Check Assistant - 核心判断引擎
 
-【已归档，不再是当前生效版本】当前生效的核心引擎已迁移至
-../../05-产品原型/规则执行/checker.py（内容和这份在迁移当下完全一致，逻辑没有再改，
-只是 RULES_DIR 的路径计算方式因为目录换了兄弟层级而不同）。这份文件保留作为
-Day05-07 历史开发过程的快照，不建议再从这里运行。
+迁移说明：从 03-学习成果/demo/checker.py 迁移而来（原文件已归档，标注指向这里）。
+这是"规则执行"模块的核心，被 CLI（本文件直接运行）和本地网页工具（../server.py）共用。
 
-架构：Day07 起，全部规则统一交给 LLM 判断，不再用 regex 做前置匹配。
-  Day06 时 05 类（患者隐私泄漏）曾经用 regex 优先匹配身份证号/手机号/病案号这类格式固定的
-  PII，理由是"快、准、不花 token"。但 Day07 用 300 条 benchmark 深挖失败 case 时发现：
-  regex 的一个小疏漏（冒号可选）导致"不含任何具体患者的姓名或病案号。"这种明确说"不涉及
-  隐私"的句子，仅仅因为提到了"病案号"三个字就被误判违规（MB143 case）。更根本的问题是：
-  这一层 regex 只能由懂正则的人写和修——而"业务人员只写自然语言规则，系统自己判断"正是
-  这个产品从一开始的定位，regex 违反了这一点。所以 Day07 决定把这层去掉，01/03/05/06/07/10
-  六类现在统一走 LLM 语义判断，用规则说明 + 违规示例 + 边界示例来教会 LLM 识别。
-  代价：05 类失去了"不花 token、100% 确定性匹配"的优势，换来的是"整个系统只有一种判断
-  方式，配置规则的人完全不用碰任何代码/正则"。
+架构：全部规则统一交给 LLM 判断，不用 regex 做前置匹配（Day07 的架构决策，详见
+../CHANGELOG.md 和 03-学习成果/Day07-架构调整-去掉regex改纯LLM.md）。
 
 用法：
-    # 推荐 Day06 直接走 DeepSeek 路线
     export DEEPSEEK_API_KEY="你自己的 key"   # 必须由你自己在终端设置，本脚本不存储/不上传这个值
     python3 checker.py "这个月表现不错，给你包个红包"
 
-    # 如果未来要切回 Anthropic，也仍然支持
+    # 如果要切回 Anthropic，也仍然支持
     export ANTHROPIC_API_KEY="你自己的 key"
-    python3 checker.py "这个月表现不错，给你包个红包"
 
-当前版本按三层拆开，Day07起规则/prompt文件已经从day编号的历史文件迁移到统一的产品文件夹：
-  - 固定 system prompt：../../05-产品原型/规则配置/system_prompt.md
-  - 用户规则配置：../../05-产品原型/规则配置/rules_config.json（业务人员唯一需要打交道的文件，纯自然语言）
-  - 内部实现增强：Day07 起已清空，不再有任何 regex/detector（历史见 ../../05-产品原型/规则配置/内部实现说明.md）
-  （旧的 ../Day06-用户规则配置模板-v2.2.json 等文件仍保留，但已标注"归档"，不再是本脚本读取的对象）
+读取的文件（同属05-产品原型，跟本文件是兄弟目录）：
+  - 固定 system prompt：../规则配置/system_prompt.md
+  - 用户规则配置：../规则配置/rules_config.json（业务人员唯一需要打交道的文件，纯自然语言）
+  - 内部实现增强：已清空，不再有任何 regex/detector（历史见 ../规则配置/内部实现说明.md）
 """
 
 import json
@@ -43,9 +30,8 @@ import urllib.error
 import urllib.request
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-ARTIFACTS_DIR = os.path.dirname(SCRIPT_DIR)
-PROJECT_ROOT = os.path.dirname(ARTIFACTS_DIR)
-RULES_DIR = os.path.join(PROJECT_ROOT, "05-产品原型", "规则配置")
+PRODUCT_ROOT = os.path.dirname(SCRIPT_DIR)  # 05-产品原型/
+RULES_DIR = os.path.join(PRODUCT_ROOT, "规则配置")
 USER_RULES_PATH = os.path.join(RULES_DIR, "rules_config.json")
 SYSTEM_PROMPT_DOC_PATH = os.path.join(RULES_DIR, "system_prompt.md")
 
@@ -214,11 +200,11 @@ def llm_classify(text, config):
     runtime = get_llm_runtime()
     if not runtime:
         raise RuntimeError(
-            "没有找到可用的 LLM key。Day06 推荐直接在你自己的终端里运行："
+            "没有找到可用的 LLM key。推荐直接在你自己的终端里运行："
             '\n    export DEEPSEEK_API_KEY="你的key"'
             "\n如果你未来要切回 Anthropic，也仍然支持："
             '\n    export ANTHROPIC_API_KEY="你的key"'
-            "\n再重新运行本脚本。这个值不会被本脚本存储或上传到任何地方。"
+            "\n再重新运行本脚本/重启server.py。这个值不会被本脚本存储或上传到任何地方。"
         )
 
     system_prompt = build_llm_system_prompt(config)
@@ -259,7 +245,7 @@ def llm_classify(text, config):
 
 
 def classify(text, config=None):
-    """主入口：Day07 起统一走 LLM 判断，不再有 regex 前置层。"""
+    """主入口：统一走 LLM 判断，不再有 regex 前置层。"""
     if config is None:
         config = load_config()
     return llm_classify(text, config)

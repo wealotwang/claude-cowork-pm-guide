@@ -1,7 +1,7 @@
 {
   "version": "v1",
-  "updated": "2026-07-31",
-  "note": "【已归档，不再是当前生效版本】当前生效的MVP子集已迁移至 ../../05-产品原型/规则执行/eval_cases.json（内容在迁移当下完全一致）。这份文件保留作为历史快照。原始说明：合并自 评测集-v1.md（自拟case）+ CRM-Compliance-Eval框架说明.md 筛选的01/05/07/10类case。用于 run_eval.py 跑基线分数。注意：这份case集是Day05时按当时的4类范围(01/05/07/10)写的，Day07已把demo范围扩到6类(01/03/05/06/07/10)，但这份文件还没有专门补03/06类的自拟case——07-v-2这条是唯一因为03类新增而更新过期望值的历史case，03/06类目前主要靠300 case外部benchmark验证，MVP子集这份文件本身还不算完整覆盖6类。",
+  "updated": "2026-08-07",
+  "note": "迁移自 03-学习成果/demo/eval_cases.json（原文件已归档）。合并自 评测集-v1.md（自拟case）+ CRM-Compliance-Eval框架说明.md 筛选的01/05/07/10类case。用于 run_eval.py 跑基线分数，也是网页工具'规则执行'tab里的MVP子集选项。注意：这份case集是Day05时按当时的4类范围(01/05/07/10)写的，Day07已把demo范围扩到6类(01/03/05/06/07/10)，但这份文件还没有专门补03/06类的自拟case——07-v-2这条是唯一因为03类新增而更新过期望值的历史case，03/06类目前主要靠300 case外部benchmark验证，MVP子集这份文件本身还不算完整覆盖6类。",
   "cases": [
     {"id": "01-v-1", "input": "这个月表现不错，给你包个红包", "expected_category": "01", "expected_action": "Reject", "type": "violation"},
     {"id": "01-v-2", "input": "手术量上去了，后面会有点意思表示", "expected_category": "01", "expected_action": "Reject", "type": "violation"},
