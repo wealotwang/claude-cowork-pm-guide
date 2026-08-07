@@ -16,7 +16,7 @@ from checker import classify, load_config
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.abspath(os.path.join(SCRIPT_DIR, "..", "..", ".."))
 CSV_PATH = os.path.join(REPO_ROOT, "medical_crm_compliance_eval_dataset_cn.csv")
-IMPLEMENTED_CATEGORIES = {"01", "05", "07", "10"}
+IMPLEMENTED_CATEGORIES = {"01", "03", "05", "06", "07", "10"}
 
 
 def load_rows():

@@ -1,13 +1,17 @@
 #!/usr/bin/env python3
 """
-AI Compliance Check Assistant - 最小可运行 demo（Day05/06 产出）
+AI Compliance Check Assistant - 最小可运行 demo（Day05/06 产出，Day07 架构调整）
 
-架构：混合两层判断，不是所有内容都上 LLM。
-  1. regex 前置层：结构化、格式固定的 PII（身份证号/手机号/病历号标注）用正则直接判 05 类 Block，
-     快、准、不花 token。
-  2. LLM 判断层：01(商业贿赂)/07(夸大疗效)/10(合规兜底) 这三类，难点在语义关系判断
-     （比如"讲课费"本身不违规，判断关键是有没有和处方量/进院挂钩），交给 LLM 结合规则说明
-     + 违规示例 + 边界示例来判断。
+架构：Day07 起，全部规则统一交给 LLM 判断，不再用 regex 做前置匹配。
+  Day06 时 05 类（患者隐私泄漏）曾经用 regex 优先匹配身份证号/手机号/病案号这类格式固定的
+  PII，理由是"快、准、不花 token"。但 Day07 用 300 条 benchmark 深挖失败 case 时发现：
+  regex 的一个小疏漏（冒号可选）导致"不含任何具体患者的姓名或病案号。"这种明确说"不涉及
+  隐私"的句子，仅仅因为提到了"病案号"三个字就被误判违规（MB143 case）。更根本的问题是：
+  这一层 regex 只能由懂正则的人写和修——而"业务人员只写自然语言规则，系统自己判断"正是
+  这个产品从一开始的定位，regex 违反了这一点。所以 Day07 决定把这层去掉，01/03/05/06/07/10
+  六类现在统一走 LLM 语义判断，用规则说明 + 违规示例 + 边界示例来教会 LLM 识别。
+  代价：05 类失去了"不花 token、100% 确定性匹配"的优势，换来的是"整个系统只有一种判断
+  方式，配置规则的人完全不用碰任何代码/正则"。
 
 用法：
     # 推荐 Day06 直接走 DeepSeek 路线
@@ -18,10 +22,10 @@ AI Compliance Check Assistant - 最小可运行 demo（Day05/06 产出）
     export ANTHROPIC_API_KEY="你自己的 key"
     python3 checker.py "这个月表现不错，给你包个红包"
 
-当前版本已经按三层拆开：
+当前版本按三层拆开：
   - 固定 system prompt：../Day06-System-Prompt-固定模板.md
-  - 用户规则配置：../Day06-用户规则配置模板-v2.2.json
-  - 内部实现增强：保留在代码里（例如 05 类结构化 PII 检测）
+  - 用户规则配置：../Day06-用户规则配置模板-v2.2.json（业务人员唯一需要打交道的文件，纯自然语言）
+  - 内部实现增强：Day07 起已清空，不再有任何 regex/detector（历史上 05 类曾有 regex 层，见 Day06-内部实现说明-v1.md）
 """
 
 import json
@@ -43,16 +47,10 @@ DEEPSEEK_API_URL = os.environ.get("DEEPSEEK_API_URL", "https://api.deepseek.com/
 DEFAULT_ANTHROPIC_MODEL = os.environ.get("ANTHROPIC_MODEL", os.environ.get("CHECKER_MODEL", "claude-sonnet-5"))
 DEFAULT_DEEPSEEK_MODEL = os.environ.get("DEEPSEEK_MODEL", os.environ.get("CHECKER_MODEL", "deepseek-v4-flash"))
 
-INTERNAL_STRUCTURED_DETECTORS = {
-    "05": [
-        {
-            "label": "身份证号(18位)",
-            "regex": r"[1-9]\d{5}(18|19|20)\d{2}(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])\d{3}[\dXx]",
-        },
-        {"label": "手机号", "regex": r"1[3-9]\d{9}"},
-        {"label": "病案号/病历号标注", "regex": r"病案号[:：]?\s*\S+|病历号[:：]?\s*\S+"},
-    ]
-}
+# 300 太紧了：Day07 验证 MB143 时实测到一次返回被截断（"rationale": "该 后直接断在这），
+# 因为 JSON 里 rationale 是完整句子，配合较长的 matched_rule_name，输出经常压线甚至超过 300 tokens。
+# 提高到 600 留出安全余量，避免因为截断导致"明明分类判对了，却因为解析不出JSON而报错"。
+LLM_MAX_TOKENS = 600
 
 
 def load_config():
@@ -67,25 +65,6 @@ def load_system_prompt_template():
     if not match:
         raise RuntimeError(f"无法从 {SYSTEM_PROMPT_DOC_PATH} 提取固定 system prompt 模板。")
     return match.group(1).strip()
-
-
-def regex_prefilter(text, config):
-    """系统内部结构化识别增强：当前先覆盖 05 类结构化 PII。"""
-    cat = config["categories"]["05"]
-    for p in INTERNAL_STRUCTURED_DETECTORS["05"]:
-        if re.search(p["regex"], text):
-            return {
-                "input": text,
-                "matched_category": "05",
-                "matched_rule_id": "05",
-                "category_name": cat["name"],
-                "matched_rule_name": cat["name"],
-                "risk_level": cat["risk_level"],
-                "action": cat["action"],
-                "rationale": f"命中结构化PII正则规则：{p['label']}，未脱敏直接暴露患者可识别信息。",
-                "matched_by": "regex",
-            }
-    return None
 
 
 def render_user_rules_for_prompt(config):
@@ -166,7 +145,7 @@ def extract_first_json_object(raw_text):
 def call_anthropic(text, system_prompt, runtime):
     body = {
         "model": runtime["model"],
-        "max_tokens": 300,
+        "max_tokens": LLM_MAX_TOKENS,
         "system": system_prompt,
         "messages": [{"role": "user", "content": text}],
     }
@@ -199,7 +178,7 @@ def call_deepseek(text, system_prompt, runtime):
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": text},
         ],
-        "max_tokens": 300,
+        "max_tokens": LLM_MAX_TOKENS,
         "temperature": 0,
     }
     req = urllib.request.Request(
@@ -235,10 +214,21 @@ def llm_classify(text, config):
         )
 
     system_prompt = build_llm_system_prompt(config)
-    if runtime["provider"] == "deepseek":
-        parsed = call_deepseek(text, system_prompt, runtime)
-    else:
-        parsed = call_anthropic(text, system_prompt, runtime)
+    call_fn = call_deepseek if runtime["provider"] == "deepseek" else call_anthropic
+
+    # Day07 实测发现：就算把 max_tokens 提到 600，LLM 仍然偶尔会把 JSON 截断或返回异常内容
+    # （非必现，同一条 case 重跑一次可能就正常了）。与其指望一次调用永远稳定，不如失败了
+    # 就重试一次——这是内部实现层的健壮性，不涉及规则内容，用户不需要关心这层。
+    last_error = None
+    parsed = None
+    for attempt in range(2):
+        try:
+            parsed = call_fn(text, system_prompt, runtime)
+            break
+        except RuntimeError as e:
+            last_error = e
+    if parsed is None:
+        raise RuntimeError(f"重试一次后仍然失败：{last_error}")
 
     default_rule_id = config.get("default_rule_id", "10")
     cat_id = str(parsed.get("matched_rule_id") or parsed.get("matched_category") or default_rule_id)
@@ -261,12 +251,9 @@ def llm_classify(text, config):
 
 
 def classify(text, config=None):
-    """主入口：先 regex，再 LLM。"""
+    """主入口：Day07 起统一走 LLM 判断，不再有 regex 前置层。"""
     if config is None:
         config = load_config()
-    result = regex_prefilter(text, config)
-    if result:
-        return result
     return llm_classify(text, config)
 
 

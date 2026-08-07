@@ -15,7 +15,7 @@ import json
 import os
 import sys
 
-from checker import classify, describe_llm_runtime, has_llm_credentials, load_config, regex_prefilter
+from checker import classify, describe_llm_runtime, has_llm_credentials, load_config
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 CASES_PATH = os.path.join(SCRIPT_DIR, "eval_cases.json")
@@ -36,11 +36,8 @@ def run():
         text = case["input"]
         expected_cat = case["expected_category"]
 
-        # 05 类可以只靠 regex 测，不需要 API key
-        regex_hit = regex_prefilter(text, config)
-        needs_llm = regex_hit is None
-
-        if needs_llm and not has_api_key:
+        # Day07 起去掉了 regex 前置层，所有类别（含05）统一走 LLM，都需要 API key
+        if not has_api_key:
             results.append({**case, "actual_category": None, "actual_action": None, "status": "SKIPPED(无API key)"})
             continue
 
@@ -70,8 +67,8 @@ def print_report(results, has_api_key):
     print("=" * 60)
 
     if not has_api_key:
-        print("⚠️  没有设置可用的 LLM key，01/07/10 类（需要LLM判断）的 case 已跳过，只测了 05 类的 regex 部分。")
-        print("    Day06 推荐：export DEEPSEEK_API_KEY=\"你的key\"")
+        print("⚠️  没有设置可用的 LLM key，Day07 起所有类别都需要 LLM 判断（已去掉 regex 前置层），本轮全部跳过。")
+        print("    推荐：export DEEPSEEK_API_KEY=\"你的key\"")
         print("    之后重新运行可以测完整 pipeline。\n")
     else:
         print(f"当前 LLM 运行时：{describe_llm_runtime()}\n")
@@ -119,6 +116,13 @@ def print_report(results, has_api_key):
         for r in failed:
             print(f"  - [{r['id']}] 输入：{r['input'][:40]}")
             print(f"    期望：{r['expected_category']}/{r['expected_action']}　实际：{r.get('actual_category')}/{r.get('actual_action')}")
+
+    errors = [r for r in results if r["status"].startswith("ERROR")]
+    if errors:
+        print("\n报错详情（不是分类判断问题，是调用/解析层出了问题）：")
+        for r in errors:
+            print(f"  - [{r['id']}] 输入：{r['input'][:40]}")
+            print(f"    {r['status']}")
 
 
 if __name__ == "__main__":

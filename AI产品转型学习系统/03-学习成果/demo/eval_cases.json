@@ -1,7 +1,7 @@
 {
   "version": "v1",
   "updated": "2026-07-31",
-  "note": "合并自 评测集-v1.md（自拟case）+ CRM-Compliance-Eval框架说明.md 筛选的01/05/07/10类case，仅保留demo范围(4类)内的。用于 run_eval.py 跑基线分数。",
+  "note": "合并自 评测集-v1.md（自拟case）+ CRM-Compliance-Eval框架说明.md 筛选的01/05/07/10类case。用于 run_eval.py 跑基线分数。注意：这份case集是Day05时按当时的4类范围(01/05/07/10)写的，Day07已把demo范围扩到6类(01/03/05/06/07/10)，但这份文件还没有专门补03/06类的自拟case——07-v-2这条是唯一因为03类新增而更新过期望值的历史case，03/06类目前主要靠300 case外部benchmark验证，MVP子集这份文件本身还不算完整覆盖6类。",
   "cases": [
     {"id": "01-v-1", "input": "这个月表现不错，给你包个红包", "expected_category": "01", "expected_action": "Reject", "type": "violation"},
     {"id": "01-v-2", "input": "手术量上去了，后面会有点意思表示", "expected_category": "01", "expected_action": "Reject", "type": "violation"},
@@ -13,7 +13,7 @@
     {"id": "01-b-3", "input": "邀请您参加下周学术研讨会，提供交通食宿补贴", "expected_category": "10", "expected_action": "Pass", "type": "boundary", "note": "行业惯例的会议差旅补贴，不应误判01类"},
 
     {"id": "07-v-1", "input": "吃了咱们这个药，病包好，一次断根", "expected_category": "07", "expected_action": "Warning", "type": "violation", "note": "模式A 绝对化承诺"},
-    {"id": "07-v-2", "input": "说明书没写儿童用量，但我们内部都这么给孩子加量用", "expected_category": "07", "expected_action": "Warning", "type": "violation", "note": "模式B 超说明书推广"},
+    {"id": "07-v-2", "input": "说明书没写儿童用量，但我们内部都这么给孩子加量用", "expected_category": "03", "expected_action": "Reject", "type": "violation", "note": "原本标注模式B'超说明书推广'借放在07类下，因为当时03类还不存在。Day07补入03类（主动超说明书/超适应症推广）后，这条case本质上就是03类的典型场景，重跑后模型也判成03/Reject，比07/Warning更贴近真实风险等级，故更新期望值，不算真实回归"},
     {"id": "07-v-3", "input": "那个不良反应提示您别太当真，基本不会发生", "expected_category": "07", "expected_action": "Warning", "type": "violation", "note": "模式C 隐瞒风险"},
     {"id": "07-v-4", "input": "隔壁那家药就是垃圾，早该淘汰了，我们的强十倍", "expected_category": "07", "expected_action": "Warning", "type": "violation", "note": "模式D 贬低竞品"},
     {"id": "07-v-5", "input": "向医生宣讲我药是同类中唯一能100%根治且绝对零副作用的黄金选择", "expected_category": "07", "expected_action": "Warning", "type": "violation", "source": "CRM框架 case028"},
@@ -25,7 +25,7 @@
 
     {"id": "05-v-1", "input": "跟踪重点患者，身份证号310101199001011234，电话13800001111，附带完整门诊病历", "expected_category": "05", "expected_action": "Block", "type": "violation", "note": "身份证号+手机号均为合成测试数据，非真实"},
     {"id": "05-v-2", "input": "记录了患者联系电话13912345678以便后续随访", "expected_category": "05", "expected_action": "Block", "type": "violation", "note": "手机号为合成测试数据"},
-    {"id": "05-gap-1", "input": "记录了特殊患者赵六的完整体检报告和电话号码以便后期随访", "expected_category": "05", "expected_action": "Block", "type": "known_gap", "note": "只提到'电话号码'但没有实际数字串，regex前置层测不出来，属于demo已知局限（非结构化PII识别未覆盖），跑eval时预期会miss，用于证明我们清楚自己没覆盖什么"},
+    {"id": "05-gap-1", "input": "记录了特殊患者赵六的完整体检报告和电话号码以便后期随访", "expected_category": "05", "expected_action": "Block", "type": "violation", "note": "曾经是known_gap：只提到'电话号码'但没有实际数字串，Day06时05类靠regex前置匹配测不出来。Day07去掉regex、改纯LLM判断、并补了非结构化PII的规则说明和示例后，重跑已经稳定通过(05/Reject)，不再是已知局限，type从known_gap改回violation"},
     {"id": "05-b-1", "input": "拜访了心内科张主任，针对其提出的用药问题进行了专业解答", "expected_category": "10", "expected_action": "Pass", "type": "boundary", "note": "完全不涉及可识别患者信息，不应误判05类"},
     {"id": "05-nm-1", "input": "科室有位患者最近血糖控制不佳，张主任想了解一下我们药物在这种情况下的使用建议", "expected_category": "10", "expected_action": "Pass", "type": "near_miss", "note": "提到'患者'但无可识别信息，不应仅因出现'患者'二字就误判05类"},
 
