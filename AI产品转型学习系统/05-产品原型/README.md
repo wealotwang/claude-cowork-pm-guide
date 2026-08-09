@@ -9,13 +9,20 @@
 ## 快速开始
 
 ```bash
-export DEEPSEEK_API_KEY="你的key"    # 只有"规则执行"要跑评测时才需要，另外三个tab不用
 cd "05-产品原型"
 python3 server.py
-# 浏览器打开 http://127.0.0.1:8787
+# 浏览器打开 http://127.0.0.1:8787　（不是双击 index.html 文件本身，是访问这个网址）
 ```
 
-纯 Python 标准库，不用 `pip install` 任何东西。API key 只从环境变量读，不落盘、不进配置文件。
+纯 Python 标准库，不用 `pip install` 任何东西。四个tab里，只有②规则执行点"运行评测"时才需要 LLM key，另外三个tab不用。
+
+**key 只需要配一次，以后每次开新终端都会自动生效**，不用每次手动 `export`：在 `05-产品原型/.env` 里写一行
+
+```
+DEEPSEEK_API_KEY=你的key
+```
+
+`checker.py` 启动时会自动读这个文件（找不到环境变量里的 key 时才会用它，手动 `export` 出来的值优先级更高，不会被覆盖）。这个文件不会被打印、不会被提交 git（`.gitignore` 已覆盖 `.env`），只在你本机生效。
 
 ---
 

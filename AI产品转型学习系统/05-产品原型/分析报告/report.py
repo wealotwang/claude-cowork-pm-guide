@@ -126,6 +126,21 @@ def find_previous_run(current):
     return max(candidates, key=_order_key)
 
 
+def _is_correct(r):
+    """判断一条case算不算"判对了"。
+
+    有分类标注的数据集，按分类判没判对来看（跟之前一样）。但有些数据集（比如2026-08-09
+    简化过的300case v2）压根不带分类列，只有风险等级+处置动作，这时候exact_category是
+    None——不代表"判错了"，只是这个维度没有标准答案可比。这种情况退化成看动作判没判对，
+    动作也没有的话再退化成看风险等级本身对不对，不能什么都没有就直接当成miss。
+    """
+    if r.get("exact_category") is not None:
+        return bool(r.get("exact_category"))
+    if r.get("exact_action") is not None:
+        return bool(r.get("exact_action"))
+    return r.get("risk_level") == r.get("actual_risk_level")
+
+
 def bucket_failures(results, implemented):
     """把所有"没judge对"的case按根因分桶——这是整个报告最有价值的部分。
 
@@ -139,7 +154,7 @@ def bucket_failures(results, implemented):
         if r.get("status") != "OK":
             buckets["runtime_error"].append(r)
             continue
-        if r.get("exact_category"):
+        if _is_correct(r):
             continue
         expected = r.get("expected_category")
         if implemented and expected and expected not in implemented:
@@ -168,10 +183,15 @@ def build_report(run):
     implemented = load_implemented_categories()
     buckets = bucket_failures(results, implemented)
 
-    # 按类别拆解，并标注这个类别当前实现了没有
+    # 按类别拆解，并标注这个类别当前实现了没有。
+    # 没有分类标注的case（expected_category是None）直接跳过，不塞进一个假的"?"分类里——
+    # 如果整个数据集都没有分类标注，这张表最后就是空的，网页/HTML那边要对着这个空表给出说明，
+    # 不能留一个看起来像是漏了什么的空表格。
     per_cat = defaultdict(lambda: {"total": 0, "correct": 0})
     for r in results:
-        cat = r.get("expected_category") or "?"
+        cat = r.get("expected_category")
+        if cat is None:
+            continue
         per_cat[cat]["total"] += 1
         per_cat[cat]["correct"] += int(bool(r.get("exact_category")))
 
@@ -190,13 +210,15 @@ def build_report(run):
     real_miss_reasons = Counter(classify_real_miss(r) for r in buckets["real_miss"])
 
     # 只统计"范围内"的case，算一个更诚实的分数：
-    # 把未实现类别的case排除掉之后，当前这套规则到底做得怎么样
+    # 把未实现类别的case排除掉之后，当前这套规则到底做得怎么样。
+    # 没有分类标注的case（expected_category是None）没法判断它是不是"未实现类别"，
+    # 默认算在范围内，用_is_correct()做兜底判断（分类没有就退化成看动作/风险等级）。
     in_scope = [
         r for r in results
-        if not implemented or (r.get("expected_category") in implemented)
+        if r.get("expected_category") is None or not implemented or (r.get("expected_category") in implemented)
     ]
     in_scope_ok = [r for r in in_scope if r.get("status") == "OK"]
-    in_scope_correct = [r for r in in_scope_ok if r.get("exact_category")]
+    in_scope_correct = [r for r in in_scope_ok if _is_correct(r)]
 
     prev = find_previous_run(run)
     comparison = None
@@ -246,7 +268,11 @@ def build_report(run):
             "tested": len(in_scope_ok),
             "correct": len(in_scope_correct),
             "accuracy": len(in_scope_correct) / len(in_scope_ok) if in_scope_ok else None,
-            "note": "只统计当前已实现类别的case，排除掉02/04/08/09这类还没做的——这个数才代表当前规则的真实水平",
+            "note": (
+                "这份数据集没有分类标注，这个数按风险等级/处置动作判得对不对来算，不涉及具体分类"
+                if not category_breakdown else
+                "只统计当前已实现类别的case，排除掉还没做的类别——这个数才代表当前规则的真实水平"
+            ),
         },
         "failure_buckets": {
             "out_of_scope": {
@@ -270,6 +296,7 @@ def build_report(run):
             },
         },
         "category_breakdown": category_breakdown,
+        "has_category_labels": bool(category_breakdown),
         "comparison": comparison,
     }
 
@@ -406,8 +433,7 @@ def render_html(report):
 {bucket_block('out_of_scope', '未实现类别的自然miss')}
 
 <h2>按类别拆解</h2>
-<table><thead><tr><th>类别</th><th>名称</th><th>状态</th><th>条数</th><th>判对</th><th>准确率</th></tr></thead>
-<tbody>{cat_rows}</tbody></table>
+{f'<table><thead><tr><th>类别</th><th>名称</th><th>状态</th><th>条数</th><th>判对</th><th>准确率</th></tr></thead><tbody>{cat_rows}</tbody></table>' if report['has_category_labels'] else '<p class="sub">这份数据集没有分类标注，只有风险等级和处置动作，跳过按类别拆解——上面的Release Gate指标和失败根因分桶依然是有效的，只是没法细分到具体是哪个规则类别的问题。</p>'}
 {comparison_block}
 
 <p class="sub" style="margin-top:32px">本报告由 <code>05-产品原型/分析报告/report.py</code> 从命中结果自动生成，不是手工维护的数字。</p>

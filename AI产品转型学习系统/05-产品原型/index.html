@@ -176,13 +176,29 @@ function escapeAttr(s) { return escapeHtml(s).replace(/"/g, '&quot;'); }
 
 /* ---------- ① 规则配置 ---------- */
 async function loadRules() {
-  const res = await fetch('/api/rules');
-  state = await res.json();
-  document.getElementById('rulesLoading').style.display = 'none';
-  document.getElementById('actionSpaceNote').textContent =
-    '当前允许的动作（action_space）：' + (state.action_space || []).join(' / ') +
-    '　默认通过类目：' + state.default_rule_id;
-  render();
+  const loadingEl = document.getElementById('rulesLoading');
+  try {
+    const res = await fetch('/api/rules');
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || ('服务器返回了 ' + res.status));
+    }
+    state = await res.json();
+    loadingEl.style.display = 'none';
+    document.getElementById('actionSpaceNote').textContent =
+      '当前允许的动作（action_space）：' + (state.action_space || []).join(' / ') +
+      '　默认通过类目：' + state.default_rule_id;
+    render();
+  } catch (e) {
+    // 以前这里没有 catch：fetch 一失败就直接卡在"加载中…"，看不出到底是网络问题
+    // 还是后端问题。现在把原因直接打在页面上，不用再去猜。
+    loadingEl.innerHTML =
+      `<div class="status err" style="font-size:14px">加载失败：${escapeHtml(e.message)}<br>
+       <span class="hint">最常见原因：① 没有先在终端运行 <code>python3 server.py</code>
+       就直接双击打开了这个 html 文件（要访问 <code>http://127.0.0.1:8787</code>，不是打开文件本身）
+       ② 终端里的服务已经停掉或报错退出　③ 8787 端口被其他程序占用。
+       检查一下终端窗口还在不在跑，然后点这里 <a href="javascript:location.reload()">刷新重试</a></span></div>`;
+  }
 }
 
 function render() {
@@ -556,13 +572,19 @@ function renderReport(rep) {
   html += bucket('runtime_error', '调用/解析层报错');
   html += bucket('out_of_scope', '未实现类别的自然miss');
 
-  html += `<div class="card"><strong>按类别拆解</strong>
-    <table><thead><tr><th>类别</th><th>名称</th><th>状态</th><th>条数</th><th>判对</th><th>准确率</th></tr></thead><tbody>`
-    + rep.category_breakdown.map(c => `<tr>
-        <td>${escapeHtml(c.category)}</td><td>${escapeHtml(c.name)}</td>
-        <td>${c.implemented ? '<span class="tag tag-ok">已实现</span>' : '<span class="tag tag-scope">未实现</span>'}</td>
-        <td>${c.total}</td><td>${c.correct}</td><td>${pct(c.accuracy)}</td>
-      </tr>`).join('') + '</tbody></table></div>';
+  if (rep.has_category_labels && rep.category_breakdown && rep.category_breakdown.length) {
+    html += `<div class="card"><strong>按类别拆解</strong>
+      <table><thead><tr><th>类别</th><th>名称</th><th>状态</th><th>条数</th><th>判对</th><th>准确率</th></tr></thead><tbody>`
+      + rep.category_breakdown.map(c => `<tr>
+          <td>${escapeHtml(c.category)}</td><td>${escapeHtml(c.name)}</td>
+          <td>${c.implemented ? '<span class="tag tag-ok">已实现</span>' : '<span class="tag tag-scope">未实现</span>'}</td>
+          <td>${c.total}</td><td>${c.correct}</td><td>${pct(c.accuracy)}</td>
+        </tr>`).join('') + '</tbody></table></div>';
+  } else {
+    html += `<div class="card"><strong>按类别拆解</strong>
+      <div class="hint" style="margin-top:8px">这份数据集没有分类标注，只有风险等级和处置动作，跳过按类别拆解——上面的Release Gate指标和失败根因分桶依然是有效的，只是没法细分到具体是哪个规则类别的问题。</div>
+    </div>`;
+  }
 
   if (rep.comparison) {
     const c = rep.comparison;

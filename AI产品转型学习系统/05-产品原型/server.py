@@ -277,6 +277,12 @@ def main():
     server = HTTPServer(("127.0.0.1", PORT), Handler)
     print(f"合规工作台已启动：http://127.0.0.1:{PORT}")
     print(f"当前 LLM 运行时：{checker.describe_llm_runtime()}")
+    # 只报"从哪个文件读到的"，不打印key本身——方便你确认自动加载到底生没生效，
+    # 而不用去猜是文件没找到、还是文件里没写对。
+    if checker.LOADED_ENV_FILE:
+        print(f"  （key 是从本地文件自动读取的：{checker.LOADED_ENV_FILE}）")
+    elif not (os.environ.get("DEEPSEEK_API_KEY") or os.environ.get("ANTHROPIC_API_KEY")):
+        print("  （没有找到任何 key：既没有手动 export，也没找到本地 .env 文件）")
     print(f"可用数据集：{len(ds.list_datasets())} 个（往 数据集/ 里丢CSV即可自动出现）")
     print("按 Ctrl+C 停止")
     try:

@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="UTF-8">
+<title>81条真实误判明细 · deepseek / deepseek-v4-flash · 20260809_164801</title>
+<style>
+ body { font-family: -apple-system, "PingFang SC", "Segoe UI", sans-serif; margin: 0; padding: 24px;
+   background: #f5f7fb; color: #1f2937; }
+ .wrap { max-width: 1560px; margin: 0 auto; }
+ h1 { font-size: 20px; margin: 0 0 4px; }
+ .sub { color: #6b7280; font-size: 13px; margin-bottom: 16px; }
+ .toolbar { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; margin-bottom: 14px;
+   background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 10px 14px; }
+ .filter-group { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+ .filter-group .glabel { font-size: 12px; color: #6b7280; font-weight: 700; margin-right: 2px; }
+ .chip { border: 1px solid #e5e7eb; background: #f9fafb; color: #374151; border-radius: 999px;
+   padding: 4px 12px; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+ .chip:hover { background: #eef2ff; }
+ .chip.active { background: #2563eb; color: #fff; border-color: #2563eb; }
+ .chip.active[data-risk="Critical"] { background: #b91c1c; border-color: #b91c1c; }
+ .chip.active[data-risk="Medium"] { background: #b45309; border-color: #b45309; }
+ .chip.active[data-risk="Low"] { background: #047857; border-color: #047857; }
+ input#filter { padding: 6px 10px; border: 1px solid #e5e7eb; border-radius: 8px; width: 240px; font-size: 13px; }
+ #count { font-size: 12px; color: #6b7280; margin-left: auto; white-space: nowrap; }
+ table { width: 100%; border-collapse: collapse; font-size: 13px; background: #fff;
+   border: 1px solid #e5e7eb; border-radius: 8px; }
+ th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #e5e7eb; vertical-align: top; }
+ th { position: sticky; top: 0; background: #f9fafb; color: #374151; font-weight: 700; z-index: 1; }
+ tr:hover { background: #fafbff; }
+ .id { font-weight: 700; white-space: nowrap; }
+ .text { min-width: 250px; }
+ .cat { white-space: nowrap; }
+ .actual { color: #b45309; font-weight: 600; }
+ .risk { white-space: nowrap; font-weight: 700; }
+ .risk-Critical { color: #b91c1c; }
+ .risk-Medium { color: #b45309; }
+ .risk-Low { color: #047857; }
+ .rationale, .orig-rationale { min-width: 210px; color: #374151; }
+ .orig-rationale { color: #6b7280; }
+ .reason { white-space: nowrap; font-size: 12px; color: #4338ca; }
+</style></head>
+<body><div class="wrap">
+<h1>81条真实误判明细（范围内该判对却判错的case）</h1>
+<div class="sub">数据集：300case-Gemini生成合规压力测试集.csv　·　跑分ID：20260809_164801　·　<strong>模型：deepseek / deepseek-v4-flash</strong>　·　默认已按风险等级排序（Critical在最上面）。「原来的期望」是这条case原本标注的风险等级，「原始判定依据」是300case数据集当初标这个期望值时写的理由，方便你判断是不是期望本身写错了；「归因」是系统自动判断的失败方向。</div>
+
+<div class="toolbar">
+  <div class="filter-group">
+    <span class="glabel">风险等级</span>
+    <button class="chip" data-risk="" onclick="setRiskFilter(this)">全部（81）</button>
+    <button class="chip" data-risk="Critical" onclick="setRiskFilter(this)">🔴 Critical（13）</button>
+    <button class="chip" data-risk="Medium" onclick="setRiskFilter(this)">🟠 Medium（2）</button>
+    <button class="chip" data-risk="Low" onclick="setRiskFilter(this)">🟢 Low（66）</button>
+  </div>
+  <div class="filter-group">
+    <span class="glabel">归因</span>
+    <button class="chip" data-reason="" onclick="setReasonFilter(this)">全部（81）</button>
+    <button class="chip" data-reason="同风险等级内串类（风险判断对，具体归类不准）" onclick="setReasonFilter(this)">同风险等级内串类（风险判断对，具体归类不准）（77）</button><button class="chip" data-reason="漏报高危（最严重：真违规被放过）" onclick="setReasonFilter(this)">漏报高危（最严重：真违规被放过）（2）</button><button class="chip" data-reason="风险等级判断偏移" onclick="setReasonFilter(this)">风险等级判断偏移（2）</button>
+  </div>
+  <input id="filter" placeholder="按ID/文本/类别再搜索…" oninput="applyFilters()">
+  <span id="count"></span>
+</div>
+
+<table id="tbl">
+<thead><tr>
+  <th>ID</th><th>输入</th><th>原来的期望<br>(风险等级)</th><th>期望对应的类别</th>
+  <th>实际是什么类</th><th>模型的理由</th><th>原始判定依据</th><th>归因</th>
+</tr></thead>
+<tbody>
+    <tr data-risk="Critical" data-reason="漏报高危（最严重：真违规被放过）">
+      <td class="id">MB005</td>
+      <td class="text">血液科年会赞助沟通：只要科室保证下半年美罗华用量不低于 200 盒，我们就全额承担科室团建的餐费。</td>
+      <td class="risk risk-Critical">Critical</td>
+      <td class="cat">01 商业贿赂与利益交换</td>
+      <td class="cat actual">06 讲课费/学术赞助对价化</td>
+      <td class="rationale">以承担团建餐费作为换取科室保证用量的条件，形成学术赞助与业务结果的对价关系，命中06规则。</td>
+      <td class="orig-rationale">将科室福利赞助与特定处方量指标直接挂钩，属于利益交换。</td>
+      <td class="reason">漏报高危（最严重：真违规被放过）</td>
+    </tr>
+    <tr data-risk="Critical" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB035</td>
+      <td class="text">沟通王主任，他表示如果能额外给他个人提供一笔“科研咨询费”，他下周就组织科室会推一下美罗华。</td>
+      <td class="risk risk-Critical">Critical</td>
+      <td class="cat">06 讲课费/学术赞助对价化</td>
+      <td class="cat actual">01 商业贿赂与利益交换</td>
+      <td class="rationale">王主任以个人额外获得科研咨询费为条件，承诺组织科室会推广产品，属于私下利益输送并与业务结果形成对价，命中商业贿赂规则。</td>
+      <td class="orig-rationale">典型的利益交换，将咨询费作为推动处方的对价。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Critical" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB040</td>
+      <td class="text">承诺向支持我们课题进院的医生提供额外的咨询服务费作为回报，不走公司公开透明的供应商系统。</td>
+      <td class="risk risk-Critical">Critical</td>
+      <td class="cat">06 讲课费/学术赞助对价化</td>
+      <td class="cat actual">01 商业贿赂与利益交换</td>
+      <td class="rationale">承诺私下提供咨询服务费作为进院回报，且明确不走公司公开透明流程，构成非正规渠道的利益输送，绑定业务结果，命中01规则。</td>
+      <td class="orig-rationale">咨询费与支持态度挂钩，且试图规避合规审核流程。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Critical" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB085</td>
+      <td class="text">承诺向支持我们产品进入该院带量采购目录的医生提供额外的“科研咨询费”作为回报，不走正常供应商系统。</td>
+      <td class="risk risk-Critical">Critical</td>
+      <td class="cat">06 讲课费/学术赞助对价化</td>
+      <td class="cat actual">01 商业贿赂与利益交换</td>
+      <td class="rationale">以私下提供&#x27;科研咨询费&#x27;为条件，换取医生支持产品进入带量采购目录，且明确不走正常供应商系统，属于典型的商业贿赂对价行为。</td>
+      <td class="orig-rationale">典型的利益交换，且试图规避公司合规审计。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Critical" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB086</td>
+      <td class="text">沟通王主任，他表示如果能给他个人提供一笔“专家调研费”，他就在科室会上推美罗华。</td>
+      <td class="risk risk-Critical">Critical</td>
+      <td class="cat">06 讲课费/学术赞助对价化</td>
+      <td class="cat actual">01 商业贿赂与利益交换</td>
+      <td class="rationale">王主任要求以个人收取‘专家调研费’为条件在科室会推广美罗华，属于私下利益输送并与推广行为形成明确对价关系，且未体现通过公司正规流程支付，命中商业贿赂规则。</td>
+      <td class="orig-rationale">将调研费作为推动处方的对价，属于商业贿赂。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Critical" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB090</td>
+      <td class="text">承诺向支持美罗华进院的医生提供女儿出国参加暑期夏令营的差旅支持。</td>
+      <td class="risk risk-Critical">Critical</td>
+      <td class="cat">06 讲课费/学术赞助对价化</td>
+      <td class="cat actual">01 商业贿赂与利益交换</td>
+      <td class="rationale">以支持医生女儿出国夏令营的差旅费为交换条件，换取医生对美罗华进院的帮助，属于与进院结果挂钩的私人利益输送，构成商业贿赂。</td>
+      <td class="orig-rationale">将私人利益诉求与业务决策挂钩。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Critical" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB128</td>
+      <td class="text">向支持美罗华进入集采目录的医生提供了一笔额外的“顾问费”，且双方约定该笔费用不走公司公开的财务系统。</td>
+      <td class="risk risk-Critical">Critical</td>
+      <td class="cat">06 讲课费/学术赞助对价化</td>
+      <td class="cat actual">01 商业贿赂与利益交换</td>
+      <td class="rationale">向医生提供额外顾问费且不走公司公开财务系统，属于私下利益输送，并与集采进院结果挂钩，命中01规则。</td>
+      <td class="orig-rationale">典型的非法利益交换，且试图规避合规监管。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Critical" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB145</td>
+      <td class="text">主任提出需要公司赞助其儿子出国留学的申请中介费，我回复只要美罗华处方量稳定，这就按“课题赞助”走报销。</td>
+      <td class="risk risk-Critical">Critical</td>
+      <td class="cat">06 讲课费/学术赞助对价化</td>
+      <td class="cat actual">01 商业贿赂与利益交换</td>
+      <td class="rationale">以‘课题赞助’名义报销主任儿子出国留学中介费，属于私人费用报销，且与处方量稳定形成对价绑定，构成商业贿赂。</td>
+      <td class="orig-rationale">变相将私人利益诉求包装成学术支出，属于严重违规。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Critical" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB181</td>
+      <td class="text">向支持美罗华进入该院临采目录的医生提供了一笔额外的“带量奖励金”，双方商定以“调研劳务费”名义走代理商报销。</td>
+      <td class="risk risk-Critical">Critical</td>
+      <td class="cat">06 讲课费/学术赞助对价化</td>
+      <td class="cat actual">01 商业贿赂与利益交换</td>
+      <td class="rationale">以‘调研劳务费’名义走代理商报销额外奖励金，与医生支持进院形成明确对价，且非公司正规流程，属于私下利益输送。</td>
+      <td class="orig-rationale">典型的非法利益交换，且试图规避公司财务监控流程。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Critical" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB198</td>
+      <td class="text">主任提出需要公司赞助其儿子出国参加夏令营的机票，我回复只要下半年销量不降，这就以“课题考察”名义支付。</td>
+      <td class="risk risk-Critical">Critical</td>
+      <td class="cat">06 讲课费/学术赞助对价化</td>
+      <td class="cat actual">01 商业贿赂与利益交换</td>
+      <td class="rationale">以课题考察名义支付主任儿子出国夏令营机票，并与下半年销量不降挂钩，构成私下利益输送换取业务结果，属于商业贿赂。</td>
+      <td class="orig-rationale">变相将私人利益诉求包装成学术活动支出，属于严重违规。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Critical" data-reason="漏报高危（最严重：真违规被放过）">
+      <td class="id">MB251</td>
+      <td class="text">拜访血液科刘主任，得知其科室正筹备出版一本淋巴瘤画册，我承诺公司可以“赞助” 2 万元用于购买书号和印刷，换取美罗华在科室的独家处方权。</td>
+      <td class="risk risk-Critical">Critical</td>
+      <td class="cat">01 商业贿赂与利益交换</td>
+      <td class="cat actual">06 讲课费/学术赞助对价化</td>
+      <td class="rationale">承诺以公司赞助2万元购买书号和印刷为条件，换取美罗华在科室的独家处方权，属于将学术赞助与业务结果挂钩的对价行为，应命中06类。</td>
+      <td class="orig-rationale">将学术出版赞助与独家处方权形成直接对价绑定，属于利益输送。</td>
+      <td class="reason">漏报高危（最严重：真违规被放过）</td>
+    </tr>
+    <tr data-risk="Critical" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB273</td>
+      <td class="text">答应向支持美罗华进入该院集采目录的医生提供女儿出国夏令营的差旅赞助，已商定由第三方供应商处理。</td>
+      <td class="risk risk-Critical">Critical</td>
+      <td class="cat">06 讲课费/学术赞助对价化</td>
+      <td class="cat actual">01 商业贿赂与利益交换</td>
+      <td class="rationale">通过第三方供应商为支持进院的医生家属提供差旅赞助，属于以赞助名义进行私下利益输送，且与进院结果形成明确对价关系，且未走公司正规流程，符合01类商业贿赂特征。</td>
+      <td class="orig-rationale">将私人利益诉求与业务准入结果挂钩，属于严重商业贿赂级别的对价。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Critical" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB293</td>
+      <td class="text">答应向支持美罗华在该院一线医保准入的关键人提供每年 5 万元的“医学咨询费”，不走公司正规合规供应商体系。</td>
+      <td class="risk risk-Critical">Critical</td>
+      <td class="cat">06 讲课费/学术赞助对价化</td>
+      <td class="cat actual">01 商业贿赂与利益交换</td>
+      <td class="rationale">承诺提供咨询费但明确不走公司正规供应商体系，且与医保准入结果挂钩，构成私下利益输送。</td>
+      <td class="orig-rationale">通过虚假咨询费行贿，且试图规避内部审计流程。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Medium" data-reason="风险等级判断偏移">
+      <td class="id">MB049</td>
+      <td class="text">宣称美罗华是“保命神药”，即使在说明书禁用的重度肾功能不全患者中也百分之百安全。</td>
+      <td class="risk risk-Medium">Medium</td>
+      <td class="cat">07 夸大疗效与绝对化宣讲</td>
+      <td class="cat actual">03 主动超说明书/超适应症推广</td>
+      <td class="rationale">宣称美罗华在说明书禁用的重度肾功能不全患者中百分之百安全，属于主动引导超说明书人群用药，同时包含绝对化疗效承诺。</td>
+      <td class="orig-rationale">虚构安全性信息，甚至引导禁忌症用药，极其危险。</td>
+      <td class="reason">风险等级判断偏移</td>
+    </tr>
+    <tr data-risk="Medium" data-reason="风险等级判断偏移">
+      <td class="id">MB050</td>
+      <td class="text">宣称美罗华单药清除幽门螺杆菌率 100%，无需联合四联方案，是消化科的福音。</td>
+      <td class="risk risk-Medium">Medium</td>
+      <td class="cat">07 夸大疗效与绝对化宣讲</td>
+      <td class="cat actual">03 主动超说明书/超适应症推广</td>
+      <td class="rationale">宣称美罗华单药清除幽门螺杆菌，属于主动推广未获批适应症，且含绝对化疗效表述，但核心违规为超适应症推广。</td>
+      <td class="orig-rationale">严重超说明书并夸大疗效，且无任何科学依据。</td>
+      <td class="reason">风险等级判断偏移</td>
+    </tr>
+    <tr data-risk="Low" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB004</td>
+      <td class="text">拜访刘主任，恰逢其准备参加行业学术会议，应其要求赠送了一本价值 75 元的《淋巴瘤临床诊疗规范》，书上有公司标识。</td>
+      <td class="risk risk-Low">Low</td>
+      <td class="cat">01 商业贿赂与利益交换</td>
+      <td class="cat actual">10 学术表述不严谨/完全合规</td>
+      <td class="rationale">赠送学术书籍且有公司标识，未与处方量等业务结果挂钩，无对价关系，属于正常学术交流。</td>
+      <td class="orig-rationale">极小额（&lt;100元）且具有高度学术专业相关性，符合行业合规标准。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Low" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB008</td>
+      <td class="text">邀请陈主任参加下周由医学会主办的学术会议，按照公司合规标准提供交通及两晚住宿安排，并已在 CRM 系统完成预审批。</td>
+      <td class="risk risk-Low">Low</td>
+      <td class="cat">01 商业贿赂与利益交换</td>
+      <td class="cat actual">10 学术表述不严谨/完全合规</td>
+      <td class="rationale">内容为按公司合规标准提供学术会议交通住宿，已完成预审批，未与处方或业务结果挂钩，属于合规学术交流。</td>
+      <td class="orig-rationale">属于合规的第三方学术会议支持，标准符合公司要求，不涉及对价关系。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Low" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB013</td>
+      <td class="text">医生主动询问美罗华在ITP（原发免疫性血小板减少症）领域的最新进展，我回复此为超说明书领域，仅应其要求提供公开发表的文献供参考。</td>
+      <td class="risk risk-Low">Low</td>
+      <td class="cat">03 主动超说明书/超适应症推广</td>
+      <td class="cat actual">10 学术表述不严谨/完全合规</td>
+      <td class="rationale">医生主动询问超说明书领域进展，回复明确说明为超说明书领域且仅提供公开发表文献，未主动推广，未命中任何违规规则。</td>
+      <td class="orig-rationale">属于响应式学术交流（Reactive），非主动诱导推广，符合医学互动规范。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Low" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB017</td>
+      <td class="text">拜访血液科刘主任，递交了美罗华最新的标准说明书，并客观介绍了其在获批适应症（如DLBCL、FL）中的用法用量。</td>
+      <td class="risk risk-Low">Low</td>
+      <td class="cat">03 主动超说明书/超适应症推广</td>
+      <td class="cat actual">10 学术表述不严谨/完全合规</td>
+      <td class="rationale">文本仅为递交说明书并客观介绍获批适应症用法用量，未触发任何违规规则。</td>
+      <td class="orig-rationale">严格依据官方批准说明书介绍，属于标准的合规学术传递。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Low" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB023</td>
+      <td class="text">记录了一例 56 岁女性 FL 患者的输液反应反馈：患者无既往过敏史，输注美罗华后出现 II 度皮疹，未记录任何身份信息。</td>
+      <td class="risk risk-Low">Low</td>
+      <td class="cat">05 患者隐私泄漏</td>
+      <td class="cat actual">10 学术表述不严谨/完全合规</td>
+      <td class="rationale">记录仅包含患者年龄、性别、疾病及输液反应等临床信息，未出现姓名、联系方式、病历号等可识别个人身份的信息，不构成患者隐私泄漏。</td>
+      <td class="orig-rationale">信息已充分脱敏，仅保留学术探讨必要的临床特征，符合合规要求。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Low" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB028</td>
+      <td class="text">记录了科室本月使用美罗华的总病例数为 45 例，其中男性占比 60%，主要针对 FL 适应症，无具体个人信息。</td>
+      <td class="risk risk-Low">Low</td>
+      <td class="cat">05 患者隐私泄漏</td>
+      <td class="cat actual">10 学术表述不严谨/完全合规</td>
+      <td class="rationale">记录为科室整体病例数和性别占比的汇总统计，未包含任何可识别具体患者身份的信息，不触发任何风险规则。</td>
+      <td class="orig-rationale">属于汇总统计数据，不涉及特定自然人的隐私，合规通过。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Low" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB034</td>
+      <td class="text">邀请陈主任作为讲者参加公司合规举办的全国线上会议，严格按照公司 FMV 标准签署服务协议并走正规审批流程。</td>
+      <td class="risk risk-Low">Low</td>
+      <td class="cat">06 讲课费/学术赞助对价化</td>
+      <td class="cat actual">10 学术表述不严谨/完全合规</td>
+      <td class="rationale">邀请讲者按公司FMV标准签署协议并走正规审批流程，属于合规学术合作，未与处方量等业务结果挂钩，未命中任何违规规则。</td>
+      <td class="orig-rationale">基于合法的学术需求聘请讲者，报酬符合市场公允价值，不涉及对价关系。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Low" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB038</td>
+      <td class="text">应科室要求，为科室合规开展的医学教育项目提供资金资助，已与医院签署正式捐赠协议，资金汇入医院对公账户。</td>
+      <td class="risk risk-Low">Low</td>
+      <td class="cat">06 讲课费/学术赞助对价化</td>
+      <td class="cat actual">10 学术表述不严谨/完全合规</td>
+      <td class="rationale">文本描述的是正式捐赠协议且资金进入医院对公账户，属于合规学术支持，未与处方量或进院等业务结果挂钩，也未触发其他违规规则。</td>
+      <td class="orig-rationale">属于合规的公益捐赠，手续完备，无特定受益人，不涉及对价。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Low" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB043</td>
+      <td class="text">根据美罗华 III 期临床研究公布的数据，其客观缓解率（ORR）在 FL 领域显著优于传统化疗组，数据引自官方说明书。</td>
+      <td class="risk risk-Low">Low</td>
+      <td class="cat">07 夸大疗效与绝对化宣讲</td>
+      <td class="cat actual">10 学术表述不严谨/完全合规</td>
+      <td class="rationale">引用官方说明书中的III期临床研究数据客观介绍疗效，无夸大、绝对化或超适应症推广，属于合规学术交流。</td>
+      <td class="orig-rationale">基于公开发表数据和官方说明书的客观陈述，不属于夸大宣传。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Low" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB048</td>
+      <td class="text">向主任介绍了真实世界研究（RWS）的最新进展，强调治疗决策应完全基于医生的独立临床判断。</td>
+      <td class="risk risk-Low">Low</td>
+      <td class="cat">07 夸大疗效与绝对化宣讲</td>
+      <td class="cat actual">10 学术表述不严谨/完全合规</td>
+      <td class="rationale">文本为正常的学术进展介绍，强调独立临床判断，未命中任何风险规则。</td>
+      <td class="orig-rationale">基于临床研究进展的沟通，尊重医生临床决策权，表述规范。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Low" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB053</td>
+      <td class="text">拜访张主任，因其近期在研究淋巴瘤新进展，应其要求赠送了一本价值95元的专业医学原著《利妥昔单抗临床应用手册》，已在合规系统备案。</td>
+      <td class="risk risk-Low">Low</td>
+      <td class="cat">01 商业贿赂与利益交换</td>
+      <td class="cat actual">10 学术表述不严谨/完全合规</td>
+      <td class="rationale">赠送专业医学书籍并已在合规系统备案，无任何与处方量或销量挂钩的对价表述，未触发任何违规规则。</td>
+      <td class="orig-rationale">书籍具有高度学术专业相关性且价值低于100元（最小价值原则），符合合规要求。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Low" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB058</td>
+      <td class="text">向科室合规开展的“淋巴瘤关爱基金”进行公益捐赠，已通过医院对公账户汇款，并签署了不带任何产品宣传条件的捐赠协议。</td>
+      <td class="risk risk-Low">Low</td>
+      <td class="cat">01 商业贿赂与利益交换</td>
+      <td class="cat actual">10 学术表述不严谨/完全合规</td>
+      <td class="rationale">公益捐赠通过医院对公账户合规进行，且协议明确不带产品宣传条件，未与处方量等业务结果形成对价，未命中任何高风险或中风险规则。</td>
+      <td class="orig-rationale">合规的公益捐赠，通过对公渠道且无利益绑定，不属于贿赂。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Low" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB063</td>
+      <td class="text">医生询问美罗华在ITP领域的最新国际研究数据，我回复此为超说明书领域，仅应其要求提供公开发表的一篇 RWS 文献供学术参考。</td>
+      <td class="risk risk-Low">Low</td>
+      <td class="cat">03 主动超说明书/超适应症推广</td>
+      <td class="cat actual">10 学术表述不严谨/完全合规</td>
+      <td class="rationale">医生主动询问超说明书领域文献，仅提供公开发表文献供学术参考，未主动推广，符合学术交流边界，未命中任何违规规则。</td>
+      <td class="orig-rationale">属于响应式学术交流（Reactive），且带有超适应症提示，符合医学互动规范。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Low" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB068</td>
+      <td class="text">向主任递交了美罗华在 DLBCL 和 FL 两个获批适应症中的用法用量折页，并强调需严格遵守说明书使用。</td>
+      <td class="risk risk-Low">Low</td>
+      <td class="cat">03 主动超说明书/超适应症推广</td>
+      <td class="cat actual">10 学术表述不严谨/完全合规</td>
+      <td class="rationale">文本为递交获批适应症用法用量折页并强调按说明书使用，未触发任何高危或中危规则。</td>
+      <td class="orig-rationale">标准的获批适应症内沟通，完全合规。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Low" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB073</td>
+      <td class="text">记录了一例 52 岁男性 DLBCL 患者的输液反应反馈：患者在滴注第 1 小时出现寒战，无其他个人识别信息。</td>
+      <td class="risk risk-Low">Low</td>
+      <td class="cat">05 患者隐私泄漏</td>
+      <td class="cat actual">10 学术表述不严谨/完全合规</td>
+      <td class="rationale">文本仅描述匿名患者病例反馈，未包含任何可识别个人身份信息，未触发任何违规规则。</td>
+      <td class="orig-rationale">信息已充分脱敏，符合合规收集不良反应反馈的要求。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Low" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB078</td>
+      <td class="text">汇总并记录科室本月共使用美罗华 32 例，平均年龄 64 岁，未涉及任何具体患者的身份信息。</td>
+      <td class="risk risk-Low">Low</td>
+      <td class="cat">05 患者隐私泄漏</td>
+      <td class="cat actual">10 学术表述不严谨/完全合规</td>
+      <td class="rationale">内容为科室层面的汇总统计数据，未涉及任何具体患者身份信息，不触发任何违规规则。</td>
+      <td class="orig-rationale">属于合规的汇总统计数据，不涉及特定自然人。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Low" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB084</td>
+      <td class="text">邀请刘教授作为讲者参加公司合规举办的线上研讨会，严格按照公司 FMV 标准签署服务协议，费用由医学部独立审批支付。</td>
+      <td class="risk risk-Low">Low</td>
+      <td class="cat">06 讲课费/学术赞助对价化</td>
+      <td class="cat actual">10 学术表述不严谨/完全合规</td>
+      <td class="rationale">内容为按公司合规流程支付讲课费，未与处方量或业务结果挂钩，属于合规学术交流安排。</td>
+      <td class="orig-rationale">基于学术需求的聘请，报酬符合市场公允价值，不涉及销量对价。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Low" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB088</td>
+      <td class="text">应医院要求，为医院合规举办的“世界淋巴瘤日”义诊活动提供公益资助，资金已汇入医院大账户。</td>
+      <td class="risk risk-Low">Low</td>
+      <td class="cat">06 讲课费/学术赞助对价化</td>
+      <td class="cat actual">10 学术表述不严谨/完全合规</td>
+      <td class="rationale">文本描述公益资助且资金汇入医院大账户，未与处方量、进院等业务结果挂钩，未命中任何违规规则</td>
+      <td class="orig-rationale">合规的公益捐赠，无特定受益人，手续完备。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Low" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB093</td>
+      <td class="text">根据美罗华 III 期临床研究公布的数据，其 ORR 在滤泡性淋巴瘤领域显著优于对照组，数据引自官方说明书。</td>
+      <td class="risk risk-Low">Low</td>
+      <td class="cat">07 夸大疗效与绝对化宣讲</td>
+      <td class="cat actual">10 学术表述不严谨/完全合规</td>
+      <td class="rationale">引用官方说明书及III期临床研究客观数据，无夸大或绝对化表述，未触发任何高危/中危规则。</td>
+      <td class="orig-rationale">基于说明书和公开发表数据的客观陈述，不属于夸大。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Low" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB103</td>
+      <td class="text">拜访陈教授，因其正参与编写淋巴瘤指南，应其要求提供了一份价值 60 元的国外最新版《CLL 诊疗蓝皮书》，已在 CRM 礼品系统中登记。</td>
+      <td class="risk risk-Low">Low</td>
+      <td class="cat">01 商业贿赂与利益交换</td>
+      <td class="cat actual">10 学术表述不严谨/完全合规</td>
+      <td class="rationale">提供价值60元的书籍并已在CRM礼品系统登记，未提及与处方量等业务结果形成对价关系，不触发01或06等违规规则。</td>
+      <td class="orig-rationale">极小额（&lt;100元）且具有高度学术专业相关性，符合公司小额礼赠合规标准。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Low" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB106</td>
+      <td class="text">医生询问美罗华在儿童难治性肾病综合征中的最新临床数据，我回复此为 Off-label 领域，仅应其要求提供一篇已发表的 Meta 分析文献供学术参考。</td>
+      <td class="risk risk-Low">Low</td>
+      <td class="cat">03 主动超说明书/超适应症推广</td>
+      <td class="cat actual">10 学术表述不严谨/完全合规</td>
+      <td class="rationale">医生主动询问超说明书适应症数据，回复明确说明为Off-label领域且仅提供已发表文献供学术参考，属于客观学术交流，未主动推广未获批用法，不命中任何违规规则。</td>
+      <td class="orig-rationale">属于被动响应式学术交流（Reactive），且明确提示了超适应症风险，符合医学互动规范。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Low" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB109</td>
+      <td class="text">统计了该院血液科本季度美罗华受药人群分布：男性 18 例，女性 22 例，平均年龄 62 岁，所有数据均已脱敏处理，无法识别个人。</td>
+      <td class="risk risk-Low">Low</td>
+      <td class="cat">05 患者隐私泄漏</td>
+      <td class="cat actual">10 学术表述不严谨/完全合规</td>
+      <td class="rationale">文本为群体汇总统计且已脱敏，不涉及具体患者个人信息，未命中任何违规规则。</td>
+      <td class="orig-rationale">属于合规的汇总统计学术数据，不含个人识别信息，符合 PIPL 要求。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Low" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB112</td>
+      <td class="text">聘请刘教授作为公司合规举办的全国性 CLL 线上会议的讲者，服务费严格按照公司 FMV（公允价值）标准及教授职级设定，且已签署书面劳务协议。</td>
+      <td class="risk risk-Low">Low</td>
+      <td class="cat">06 讲课费/学术赞助对价化</td>
+      <td class="cat actual">10 学术表述不严谨/完全合规</td>
+      <td class="rationale">文本描述的是按公允价值标准支付讲者服务费并签署书面协议的正规学术合作，未与处方量或进院等业务结果挂钩，未命中任何违规规则。</td>
+      <td class="orig-rationale">基于真实学术需求的聘请，报酬符合市场公允价值，手续完备且不涉及销量对价。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Low" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB115</td>
+      <td class="text">根据该药官方说明书公布的 III 期临床数据，美罗华联合 CHOP 方案治疗 DLBCL 的客观缓解率（ORR）优于单纯化疗组。</td>
+      <td class="risk risk-Low">Low</td>
+      <td class="cat">07 夸大疗效与绝对化宣讲</td>
+      <td class="cat actual">10 学术表述不严谨/完全合规</td>
+      <td class="rationale">文本基于官方说明书III期临床数据客观陈述，未涉及夸大疗效、超说明书推广、利益交换或患者隐私，属于合规学术交流。</td>
+      <td class="orig-rationale">基于官方批准说明书及证据的客观陈述，不属于夸大或误导宣传。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Low" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB120</td>
+      <td class="text">拜访陈主任，中午在医院食堂请主任吃了个简餐，消费金额 28 元，期间交流了美罗华在 CLL 的最新安全性更新。</td>
+      <td class="risk risk-Low">Low</td>
+      <td class="cat">01 商业贿赂与利益交换</td>
+      <td class="cat actual">10 学术表述不严谨/完全合规</td>
+      <td class="rationale">文本仅描述正常医院食堂简餐交流，未涉及任何利益输送对价、超说明书推广、隐私泄露、费用对价或夸大疗效表述。</td>
+      <td class="orig-rationale">属于极小额的正常工作餐（远低于合规上限），且符合业务交流场景。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Low" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB123</td>
+      <td class="text">向风湿科刘大夫递交了美罗华最新的标准说明书，并客观介绍了其在类风湿性关节炎（RA）获批适应症中的用法用量。</td>
+      <td class="risk risk-Low">Low</td>
+      <td class="cat">03 主动超说明书/超适应症推广</td>
+      <td class="cat actual">10 学术表述不严谨/完全合规</td>
+      <td class="rationale">文本仅为客观递交标准说明书并介绍获批适应症用法用量，未涉及任何违规对价、超说明书推广或隐私泄漏等内容。</td>
+      <td class="orig-rationale">严格依据官方批准说明书介绍，属于标准的合规学术传递。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Low" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB126</td>
+      <td class="text">医生反馈一例 45 岁女性患者在使用美罗华后出现严重过敏性休克，已成功抢救，未记录该患者任何身份识别信息。</td>
+      <td class="risk risk-Low">Low</td>
+      <td class="cat">05 患者隐私泄漏</td>
+      <td class="cat actual">10 学术表述不严谨/完全合规</td>
+      <td class="rationale">文本仅客观记录医生反馈的不良反应案例，未包含患者身份识别信息，未涉及任何违规推广或对价行为，属于默认合规场景。</td>
+      <td class="orig-rationale">信息已充分脱敏，仅记录临床表现供医学部门评估安全性，符合合规要求。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Low" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB129</td>
+      <td class="text">应医院慈善基金会申请，为医院举办的“淋巴瘤关爱周”义诊活动提供资金资助，资金已直接汇入医院对公账户，无特定受益人。</td>
+      <td class="risk risk-Low">Low</td>
+      <td class="cat">06 讲课费/学术赞助对价化</td>
+      <td class="cat actual">10 学术表述不严谨/完全合规</td>
+      <td class="rationale">文本描述的是通过医院对公账户进行的公益资助，无特定受益人，未提及处方量、销量等对价关系，也未涉及其他违规内容，属于合规行为。</td>
+      <td class="orig-rationale">合规的慈善捐赠，手续齐备，无利益绑定，不属于对价化行为。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Low" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB132</td>
+      <td class="text">向主任介绍了 R-CHOP 方案在 DLBCL 领域的真实世界研究（RWS）最新数据，强调治疗方案需由医生结合患者体征进行独立判断。</td>
+      <td class="risk risk-Low">Low</td>
+      <td class="cat">07 夸大疗效与绝对化宣讲</td>
+      <td class="cat actual">10 学术表述不严谨/完全合规</td>
+      <td class="rationale">文本为客观介绍真实世界研究数据，并强调医生独立判断，未触发任何违规规则，属于默认合规类别。</td>
+      <td class="orig-rationale">基于公开发表学术数据的交流，尊重医生独立临床决策权。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Low" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB137</td>
+      <td class="text">拜访陈主任，因其生日将至，赠送了一份价值 45 元的定制医学期刊订阅号年度会员，已备案为学术小礼品。</td>
+      <td class="risk risk-Low">Low</td>
+      <td class="cat">01 商业贿赂与利益交换</td>
+      <td class="cat actual">10 学术表述不严谨/完全合规</td>
+      <td class="rationale">赠送价值45元已备案的学术小礼品，未与处方量或进院等任何业务结果形成对价关系，不命中任何风险规则。</td>
+      <td class="orig-rationale">金额适当（&lt;100元）且具有高度职业相关性，符合礼品管理规范。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Low" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB140</td>
+      <td class="text">医生询问美罗华在 GPA/MPA 领域的用法，我准确递交了说明书相关章节，并提示该药在严重活动性感染期禁用。</td>
+      <td class="risk risk-Low">Low</td>
+      <td class="cat">03 主动超说明书/超适应症推广</td>
+      <td class="cat actual">10 学术表述不严谨/完全合规</td>
+      <td class="rationale">文本为客观介绍说明书内容及禁忌提示，未命中任何违规规则。</td>
+      <td class="orig-rationale">依据获批适应症进行规范说明，并主动进行禁忌提示，高度合规。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Low" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB143</td>
+      <td class="text">记录了科室本月美罗华受药人群的 CD20 阳性率汇总统计，数据不含任何具体患者的姓名或病案号。</td>
+      <td class="risk risk-Low">Low</td>
+      <td class="cat">05 患者隐私泄漏</td>
+      <td class="cat actual">10 学术表述不严谨/完全合规</td>
+      <td class="rationale">内容为科室群体层面的汇总统计，未涉及任何具体患者可识别信息，符合05规则边界示例，未命中其他规则。</td>
+      <td class="orig-rationale">属于合规的汇总分析数据，不涉及 PII 泄露。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Low" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB146</td>
+      <td class="text">邀请血液中心专家参加公司合规开展的“中性粒细胞减少症临床管理”调研，报酬已报备医学部并符合独立性原则。</td>
+      <td class="risk risk-Low">Low</td>
+      <td class="cat">06 讲课费/学术赞助对价化</td>
+      <td class="cat actual">10 学术表述不严谨/完全合规</td>
+      <td class="rationale">邀请专家参加合规调研并说明报酬已报备且符合独立性原则，未涉及对价、超说明书推广或隐私泄漏，属于合规学术交流。</td>
+      <td class="orig-rationale">正常的医学调研项目，报酬独立且符合业务需求。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Low" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB153</td>
+      <td class="text">拜访张教授，其正在进行一项关于利妥昔单抗作用机制的学术课题，应其要求赠送了一本价值 85 元的专业医学工具书，附带合规部审批号。</td>
+      <td class="risk risk-Low">Low</td>
+      <td class="cat">01 商业贿赂与利益交换</td>
+      <td class="cat actual">10 学术表述不严谨/完全合规</td>
+      <td class="rationale">赠送专业书籍有合规部审批号，且未与处方量或销量形成对价绑定，属于正常学术交流，未命中任何违规规则。</td>
+      <td class="orig-rationale">书籍具有高度专业相关性且价值低于 100 元，符合公司小额礼赠合规标准。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Low" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB157</td>
+      <td class="text">医生询问美罗华在原发性膜性肾病中的文献数据，我回复此为超说明书领域，仅应其要求提供公开发表的一篇专家共识供学术讨论。</td>
+      <td class="risk risk-Low">Low</td>
+      <td class="cat">03 主动超说明书/超适应症推广</td>
+      <td class="cat actual">10 学术表述不严谨/完全合规</td>
+      <td class="rationale">医生主动询问超说明书文献数据，回复明确说明属超说明书领域且仅提供公开专家共识供学术讨论，符合学术交流边界，未主动推广超说明书用法。</td>
+      <td class="orig-rationale">属于响应式学术交流（Reactive），且明确提示了超适应症状态。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Low" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB160</td>
+      <td class="text">统计了科室本月美罗华输注过程中发生的严重不良反应总数为 2 例，均为过敏性休克，未涉及任何患者个人身份信息。</td>
+      <td class="risk risk-Low">Low</td>
+      <td class="cat">05 患者隐私泄漏</td>
+      <td class="cat actual">10 学术表述不严谨/完全合规</td>
+      <td class="rationale">文本仅涉及科室层面的严重不良反应汇总统计，未包含任何可识别患者个人身份信息，不命中05规则，也未触发其他风险规则。</td>
+      <td class="orig-rationale">属于合规的汇总统计数据，不含个人识别信息。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Low" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB163</td>
+      <td class="text">邀请刘教授作为讲者参加公司合规举办的全国 DLBCL 线上会议，服务费严格按照公司 FMV 标准支付，且讲者服务真实发生。</td>
+      <td class="risk risk-Low">Low</td>
+      <td class="cat">06 讲课费/学术赞助对价化</td>
+      <td class="cat actual">10 学术表述不严谨/完全合规</td>
+      <td class="rationale">邀请讲者参加合规会议并按FMV标准支付服务费，无对价关系，未触发任何违规规则。</td>
+      <td class="orig-rationale">基于学术需求的聘请，报酬符合市场公允价值，不涉及销量对价。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Low" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB166</td>
+      <td class="text">根据该药官方说明书公布的临床数据，R-CHOP 方案治疗 DLBCL 的客观缓解率（ORR）显著优于单纯 CHOP 化疗组。</td>
+      <td class="risk risk-Low">Low</td>
+      <td class="cat">07 夸大疗效与绝对化宣讲</td>
+      <td class="cat actual">10 学术表述不严谨/完全合规</td>
+      <td class="rationale">内容为基于官方说明书临床数据的客观疗效表述，未涉及任何违规要素，属于合规学术交流。</td>
+      <td class="orig-rationale">基于官方批准说明书及循证证据的客观陈述，不属于夸大。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Low" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB173</td>
+      <td class="text">拜访陈主任，中午在医院食堂请主任吃了个简餐，消费金额 32 元，期间交流了美罗华在 CLL 领域的一线医保报销政策。</td>
+      <td class="risk risk-Low">Low</td>
+      <td class="cat">01 商业贿赂与利益交换</td>
+      <td class="cat actual">10 学术表述不严谨/完全合规</td>
+      <td class="rationale">简餐交流报销政策，未涉及任何对价、超适应症、隐私或夸大疗效等违规内容，属于正常合规拜访。</td>
+      <td class="orig-rationale">属于极小额的正常工作餐，符合业务交流场景且远低于合规上限。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Low" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB176</td>
+      <td class="text">向风湿科刘大夫递交了美罗华最新的标准说明书，并客观介绍了其在获批适应症（如RA、GPA）中的用法用量。</td>
+      <td class="risk risk-Low">Low</td>
+      <td class="cat">03 主动超说明书/超适应症推广</td>
+      <td class="cat actual">10 学术表述不严谨/完全合规</td>
+      <td class="rationale">内容为递交说明书并客观介绍获批适应症，未触发任何违规规则。</td>
+      <td class="orig-rationale">严格依据官方批准说明书介绍，属于标准的合规学术传递。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Low" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB179</td>
+      <td class="text">医生反馈一例 42 岁女性患者在使用美罗华后出现 3 度皮疹反应，已按要求收集 AE 表，未记录任何身份识别信息。</td>
+      <td class="risk risk-Low">Low</td>
+      <td class="cat">05 患者隐私泄漏</td>
+      <td class="cat actual">10 学术表述不严谨/完全合规</td>
+      <td class="rationale">文本仅描述一例未含身份识别信息的患者不良反应反馈，符合患者隐私保护边界，未触发任何违规规则。</td>
+      <td class="orig-rationale">信息已充分脱敏，仅记录临床表现供不良反应评估，符合合规要求。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Low" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB182</td>
+      <td class="text">应医院伦理委员会要求，为医院开展的“淋巴瘤规范化诊疗”公益宣教项目提供资金资助，资金直接汇入医院对公账户。</td>
+      <td class="risk risk-Low">Low</td>
+      <td class="cat">06 讲课费/学术赞助对价化</td>
+      <td class="cat actual">10 学术表述不严谨/完全合规</td>
+      <td class="rationale">对医院公益宣教项目的资金资助汇入对公账户，未与处方量等业务结果挂钩，不触发任何违规规则。</td>
+      <td class="orig-rationale">合规的公益捐赠，手续齐备，无特定受益人，不涉及对价。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Low" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB185</td>
+      <td class="text">向主任介绍了 R-CHOP 方案在滤泡性淋巴瘤（FL）领域的最新真实世界研究数据，强调治疗方案需由医生结合患者分期决定。</td>
+      <td class="risk risk-Low">Low</td>
+      <td class="cat">07 夸大疗效与绝对化宣讲</td>
+      <td class="cat actual">10 学术表述不严谨/完全合规</td>
+      <td class="rationale">内容为客观学术数据介绍，未涉及任何违规行为，属于合规学术交流。</td>
+      <td class="orig-rationale">基于公开发表学术数据的交流，尊重医生独立临床决策权。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Low" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB190</td>
+      <td class="text">拜访陈主任，因其生日将至，赠送了一份价值 48 元的定制医学期刊订阅会员，已备案为正常学术礼品。</td>
+      <td class="risk risk-Low">Low</td>
+      <td class="cat">01 商业贿赂与利益交换</td>
+      <td class="cat actual">10 学术表述不严谨/完全合规</td>
+      <td class="rationale">赠送已备案的低价值学术礼品，未与处方或销量等业务结果挂钩，不构成商业贿赂或违规对价，未命中任何当前启用规则。</td>
+      <td class="orig-rationale">金额适当（&lt;100元）且具有高度职业相关性，符合公司小额礼品管理规范。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Low" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB193</td>
+      <td class="text">医生询问美罗华在 CLL 患者中的起始剂量，我准确递交了说明书相关章节，并强调需关注 3 级中性粒细胞减少风险。</td>
+      <td class="risk risk-Low">Low</td>
+      <td class="cat">03 主动超说明书/超适应症推广</td>
+      <td class="cat actual">10 学术表述不严谨/完全合规</td>
+      <td class="rationale">记录为客观提供说明书信息并提示安全风险，未命中任何违规规则。</td>
+      <td class="orig-rationale">依据获批适应症进行规范说明，并主动进行安全性提示，高度合规。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Low" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB196</td>
+      <td class="text">汇总并记录了科室本季度美罗华输注反应的发生率分布，数据已脱敏，仅含性别比例与反应分级统计。</td>
+      <td class="risk risk-Low">Low</td>
+      <td class="cat">05 患者隐私泄漏</td>
+      <td class="cat actual">10 学术表述不严谨/完全合规</td>
+      <td class="rationale">文本为脱敏后的群体汇总统计，不涉及具体患者身份信息，未命中任何风险规则。</td>
+      <td class="orig-rationale">属于合规的汇总统计数据，不涉及 PII 泄露。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Low" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB199</td>
+      <td class="text">邀请血液中心专家参加公司合规开展的“血液肿瘤治疗现状”线上访谈，劳务费标准符合 FMV 并独立于业务指标。</td>
+      <td class="risk risk-Low">Low</td>
+      <td class="cat">06 讲课费/学术赞助对价化</td>
+      <td class="cat actual">10 学术表述不严谨/完全合规</td>
+      <td class="rationale">邀请专家参加合规线上访谈并支付符合FMV的劳务费，且明确独立于业务指标，未构成利益输送或对价关系，也未触发其他风险规则。</td>
+      <td class="orig-rationale">正常的医学调研项目，报酬独立且基于真实需求。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Low" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB203</td>
+      <td class="text">拜访张教授，其近期正在撰写淋巴瘤专家共识，应其要求赠送了一本价值 88 元的最新版《血液病诊疗指南》，已在 CRM 礼品系统备案。</td>
+      <td class="risk risk-Low">Low</td>
+      <td class="cat">01 商业贿赂与利益交换</td>
+      <td class="cat actual">10 学术表述不严谨/完全合规</td>
+      <td class="rationale">赠送已备案的学术书籍，无对价绑定，未触发任何风险规则。</td>
+      <td class="orig-rationale">极小额（&lt;100元）且具有高度学术专业相关性，符合公司合规标准。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Low" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB207</td>
+      <td class="text">医生主动询问美罗华在难治性肾病综合征（NS）患儿中的研究进展，我回复此为超说明书领域，仅应其要求提供了一篇公开发表的 Meta 分析文献供学术讨论。</td>
+      <td class="risk risk-Low">Low</td>
+      <td class="cat">03 主动超说明书/超适应症推广</td>
+      <td class="cat actual">10 学术表述不严谨/完全合规</td>
+      <td class="rationale">医生主动询问超说明书内容，回复明确说明是超说明书领域且仅提供文献供学术讨论，符合边界示例，未构成主动超说明书推广。</td>
+      <td class="orig-rationale">属于被动响应式学术交流（Reactive），且带有显著的超适应症提示，合规。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Low" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB211</td>
+      <td class="text">统计记录了科室本月使用美罗华的患者分布：其中 40-50 岁占比 30%，均完成了 HBV 筛查，所有数据均已脱敏处理。</td>
+      <td class="risk risk-Low">Low</td>
+      <td class="cat">05 患者隐私泄漏</td>
+      <td class="cat actual">10 学术表述不严谨/完全合规</td>
+      <td class="rationale">文本为群体层面脱敏统计数据，未涉及可识别个人隐私，未命中其他风险规则。</td>
+      <td class="orig-rationale">属于合规的汇总统计学术数据，不含个人识别信息。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Low" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB214</td>
+      <td class="text">聘请刘教授作为全国 CLL 线上学术会议的讲者，服务费严格按照公司 FMV 标准并签署劳务协议，该教授确实具备相应的专业造诣。</td>
+      <td class="risk risk-Low">Low</td>
+      <td class="cat">06 讲课费/学术赞助对价化</td>
+      <td class="cat actual">10 学术表述不严谨/完全合规</td>
+      <td class="rationale">文本描述按公司FMV标准并签署劳务协议聘请讲者，未涉及处方量、进院等对价关系，属于合规学术合作。</td>
+      <td class="orig-rationale">基于真实学术需求的聘请，报酬公允且独立于业务指标。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Low" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB217</td>
+      <td class="text">根据该药官方说明书公布的临床数据，美罗华联合标准 CHOP 化疗的客观缓解率（ORR）在 DLBCL 领域显著优于单纯化疗组。</td>
+      <td class="risk risk-Low">Low</td>
+      <td class="cat">07 夸大疗效与绝对化宣讲</td>
+      <td class="cat actual">10 学术表述不严谨/完全合规</td>
+      <td class="rationale">内容为基于官方说明书数据的客观疗效介绍，未涉及任何违规行为。</td>
+      <td class="orig-rationale">基于批准说明书及循证证据的客观陈述，不属于夸大宣传。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Low" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB233</td>
+      <td class="text">统计了该院血液科本季度美罗华受药人群的客观缓解率（ORR）分布，数据已全部脱敏，无法识别至特定个人。</td>
+      <td class="risk risk-Low">Low</td>
+      <td class="cat">05 患者隐私泄漏</td>
+      <td class="cat actual">10 学术表述不严谨/完全合规</td>
+      <td class="rationale">文本为群体层面的脱敏汇总统计，未指向任何可识别患者，不触发05及其他规则，默认通过。</td>
+      <td class="orig-rationale">属于合规的汇总统计学术数据，不含个人识别信息，符合 PIPL 要求。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Low" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB234</td>
+      <td class="text">拜访血液科刘主任，应其要求赠送了一本价值 85 元的专业医学书籍《B 细胞淋巴瘤诊疗规范》，已在合规系统备案。</td>
+      <td class="risk risk-Low">Low</td>
+      <td class="cat">01 商业贿赂与利益交换</td>
+      <td class="cat actual">10 学术表述不严谨/完全合规</td>
+      <td class="rationale">赠送已备案的专业书籍，无对价绑定或无违规推广内容，未命中任何风险规则，默认通过。</td>
+      <td class="orig-rationale">极小额（&lt;100元）且具有高度专业相关性，符合公司合规标准。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Low" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB237</td>
+      <td class="text">邀请刘教授参加公司合规举办的全国性线上学术会议，讲课费严格按照公司 FMV 标准执行，且教授确实具备相应的专业造诣。</td>
+      <td class="risk risk-Low">Low</td>
+      <td class="cat">06 讲课费/学术赞助对价化</td>
+      <td class="cat actual">10 学术表述不严谨/完全合规</td>
+      <td class="rationale">文本仅描述按合规标准邀请教授参加学术会议并支付讲课费，未与处方量、进院或销量等业务结果挂钩，属于合规学术交流，未命中任何风险规则。</td>
+      <td class="orig-rationale">基于真实学术需求的聘请，报酬公允且独立于业务指标。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Low" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB246</td>
+      <td class="text">医生询问美罗华在 ITP 领域的最新真实世界研究（RWS）数据，我回复此为超说明书领域，仅应其要求提供公开发表文献参考。</td>
+      <td class="risk risk-Low">Low</td>
+      <td class="cat">03 主动超说明书/超适应症推广</td>
+      <td class="cat actual">10 学术表述不严谨/完全合规</td>
+      <td class="rationale">医生主动询问超说明书领域数据，仅提供公开发表文献参考，未主动推广超说明书使用，符合03规则边界示例，未命中任何违规规则。</td>
+      <td class="orig-rationale">属于被动响应式学术交流（Reactive），且明确提示了风险，符合合规规范。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Low" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB248</td>
+      <td class="text">根据美罗华 III 期临床研究公布的数据，其 ORR 在 DLBCL 领域显著优于单纯化疗组，数据引自官方批准说明书。</td>
+      <td class="risk risk-Low">Low</td>
+      <td class="cat">07 夸大疗效与绝对化宣讲</td>
+      <td class="cat actual">10 学术表述不严谨/完全合规</td>
+      <td class="rationale">内容为客观引用临床研究数据和说明书信息，未涉及任何违规行为。</td>
+      <td class="orig-rationale">基于公开发表学术数据和说明书的客观陈述，不属于夸大宣传。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Low" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB253</td>
+      <td class="text">拜访张教授，应其开展 FL 流行病学研究的需求，赠送了一本价值 92 元的《中国淋巴瘤防治蓝皮书》，该书由学会官方出版并带公司标识。</td>
+      <td class="risk risk-Low">Low</td>
+      <td class="cat">01 商业贿赂与利益交换</td>
+      <td class="cat actual">10 学术表述不严谨/完全合规</td>
+      <td class="rationale">赠送学术书籍未与处方、进院等业务结果形成对价绑定，属于正常学术交流支持，未命中任何风险规则。</td>
+      <td class="orig-rationale">极小额专业书籍（&lt;100元），符合学术相关性及最小价值原则。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Low" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB256</td>
+      <td class="text">医生询问美罗华在系统性红斑狼疮（SLE）中的临床文献，我回复此为 Off-label 领域，仅应其要求提供公开发表的两篇 Meta 分析供学术参考。</td>
+      <td class="risk risk-Low">Low</td>
+      <td class="cat">03 主动超说明书/超适应症推广</td>
+      <td class="cat actual">10 学术表述不严谨/完全合规</td>
+      <td class="rationale">医生主动询问超适应症文献，回复明确说明为Off-label领域且仅提供公开发表文献供学术参考，属于学术交流，不构成主动推广。</td>
+      <td class="orig-rationale">属于被动响应式学术交流（Reactive），且带有超适应症风险提示。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Low" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB259</td>
+      <td class="text">汇总记录了该院血液科本月美罗华受药人群分布：总计 25 人，平均年龄 58 岁，CD20 阳性率 100%，无具体患者识别信息。</td>
+      <td class="risk risk-Low">Low</td>
+      <td class="cat">05 患者隐私泄漏</td>
+      <td class="cat actual">10 学术表述不严谨/完全合规</td>
+      <td class="rationale">文本为群体汇总统计，未包含任何可识别具体患者的信息，不命中05规则，也无其他违规内容。</td>
+      <td class="orig-rationale">属于合规的汇总统计学术数据，不涉及特定自然人隐私。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Low" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB262</td>
+      <td class="text">聘请刘教授作为讲者参加公司合规举办的 CLL 规范化治疗巡讲，劳务协议签署完备，报酬符合 FMV 且与处方量无关。</td>
+      <td class="risk risk-Low">Low</td>
+      <td class="cat">06 讲课费/学术赞助对价化</td>
+      <td class="cat actual">10 学术表述不严谨/完全合规</td>
+      <td class="rationale">文本明确描述劳务协议完备、报酬符合FMV且与处方量无关，属于合规讲课费安排，未命中任何违规规则。</td>
+      <td class="orig-rationale">基于真实学术需求的聘请，报酬公允且手续完备。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Low" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB265</td>
+      <td class="text">根据 POLARIX 研究公布的数据，美罗华联合化疗方案在特定 B 细胞淋巴瘤患者中的 PFS 显著优于对照组，数据引自官方说明书。</td>
+      <td class="risk risk-Low">Low</td>
+      <td class="cat">07 夸大疗效与绝对化宣讲</td>
+      <td class="cat actual">10 学术表述不严谨/完全合规</td>
+      <td class="rationale">引用官方说明书及研究数据，客观陈述疗效，未涉及任何违规内容。</td>
+      <td class="orig-rationale">基于获批适应症内公开发表的研究证据进行客观陈述，不属于夸大。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Low" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB283</td>
+      <td class="text">向风湿科刘大夫客观递交了美罗华在 GPA 和 MPA 获批适应症中的标准用法用量，并提示需在成人中应用。</td>
+      <td class="risk risk-Low">Low</td>
+      <td class="cat">03 主动超说明书/超适应症推广</td>
+      <td class="cat actual">10 学术表述不严谨/完全合规</td>
+      <td class="rationale">客观递交获批适应症的标准用法用量，并提示成人应用，符合说明书范围，未触发任何违规规则。</td>
+      <td class="orig-rationale">基于获批适应症的规范学术沟通，完全合规。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Low" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB287</td>
+      <td class="text">介绍了美罗华在 CLL 领域的一线医保报销最新政策，强调报销前提需符合说明书标注的获批适应症。</td>
+      <td class="risk risk-Low">Low</td>
+      <td class="cat">07 夸大疗效与绝对化宣讲</td>
+      <td class="cat actual">10 学术表述不严谨/完全合规</td>
+      <td class="rationale">文本仅介绍医保报销政策并强调符合说明书适应症，无任何违规行为。</td>
+      <td class="orig-rationale">合规的医保政策解读与准入宣贯，强调了适应症限制。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Low" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB295</td>
+      <td class="text">记录了科室本月 40 例 FL 患者的 CD20 表达强度统计，数据已脱敏，仅含汇总百分比，用于评估产品覆盖度。</td>
+      <td class="risk risk-Low">Low</td>
+      <td class="cat">05 患者隐私泄漏</td>
+      <td class="cat actual">10 学术表述不严谨/完全合规</td>
+      <td class="rationale">记录的是已脱敏的群体汇总统计数据，无法定位到具体患者，不构成患者隐私泄漏，也未触发其他高危或中危规则。</td>
+      <td class="orig-rationale">属于合规的汇总统计学术数据，符合 PIPL 规定。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr>
+    <tr data-risk="Low" data-reason="同风险等级内串类（风险判断对，具体归类不准）">
+      <td class="id">MB298</td>
+      <td class="text">邀请专家参加由公司合规资助、医学会主办的“淋巴瘤诊疗规范”城市沙龙，相关费用支付严格遵循医学会准则。</td>
+      <td class="risk risk-Low">Low</td>
+      <td class="cat">06 讲课费/学术赞助对价化</td>
+      <td class="cat actual">10 学术表述不严谨/完全合规</td>
+      <td class="rationale">文本仅描述合规资助的学术沙龙及费用遵循医学会准则，未与处方量、进院等业务结果挂钩，未命中任何风险规则。</td>
+      <td class="orig-rationale">属于合规的第三方学术会议支持，无直接对价关系。</td>
+      <td class="reason">同风险等级内串类（风险判断对，具体归类不准）</td>
+    </tr></tbody>
+</table>
+</div>
+<script>
+let activeRisk = '';
+let activeReason = '';
+
+function setRiskFilter(btn) {
+  activeRisk = btn.dataset.risk;
+  document.querySelectorAll('.chip[data-risk]').forEach(b => b.classList.toggle('active', b === btn));
+  applyFilters();
+}
+function setReasonFilter(btn) {
+  activeReason = btn.dataset.reason;
+  document.querySelectorAll('.chip[data-reason]').forEach(b => b.classList.toggle('active', b === btn));
+  applyFilters();
+}
+function applyFilters() {
+  const q = document.getElementById('filter').value.toLowerCase();
+  let shown = 0;
+  document.querySelectorAll('#tbl tbody tr').forEach(tr => {
+    const okRisk = !activeRisk || tr.dataset.risk === activeRisk;
+    const okReason = !activeReason || tr.dataset.reason === activeReason;
+    const okText = !q || tr.textContent.toLowerCase().includes(q);
+    const show = okRisk && okReason && okText;
+    tr.style.display = show ? '' : 'none';
+    if (show) shown++;
+  });
+  document.getElementById('count').textContent = `显示 ${shown} / 81 条`;
+}
+// 默认选中"全部"
+document.querySelector('.chip[data-risk=""]').classList.add('active');
+document.querySelector('.chip[data-reason=""]').classList.add('active');
+applyFilters();
+</script>
+</body></html>

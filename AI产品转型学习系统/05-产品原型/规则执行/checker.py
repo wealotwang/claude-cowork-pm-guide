@@ -21,11 +21,13 @@ AI Compliance Check Assistant - 核心判断引擎
   - 内部实现增强：已清空，不再有任何 regex/detector（历史见 ../规则配置/内部实现说明.md）
 """
 
+import glob
 import json
 import os
 import re
 import socket
 import sys
+import unicodedata
 import urllib.error
 import urllib.request
 
@@ -34,6 +36,77 @@ PRODUCT_ROOT = os.path.dirname(SCRIPT_DIR)  # 05-产品原型/
 RULES_DIR = os.path.join(PRODUCT_ROOT, "规则配置")
 USER_RULES_PATH = os.path.join(RULES_DIR, "rules_config.json")
 SYSTEM_PROMPT_DOC_PATH = os.path.join(RULES_DIR, "system_prompt.md")
+
+
+def _resolve_existing_path(path):
+    """判断一个路径是否存在，顺带绕开 macOS 的中文文件名编码坑。
+
+    同一个中文文件夹名（比如"03-学习成果"）在不同工具创建时，底层字节可能是
+    NFC（组合式）或 NFD（分解式）两种 Unicode 归一化形式之一——人眼看着完全一样，
+    但 os.path.isfile() 是按字节比较的，写死在代码里的字符串如果跟磁盘上实际存的
+    归一化形式不一致，就会判断成"文件不存在"，即使文件真的在那儿。两种形式都试一遍。
+    """
+    for form in (None, "NFC", "NFD"):
+        candidate = path if form is None else unicodedata.normalize(form, path)
+        if os.path.isfile(candidate):
+            return candidate
+    return None
+
+
+def _find_env_candidates():
+    """列出所有可能存 LLM key 的本地文件路径，新位置优先，旧位置向后兼容。
+
+    03-学习成果/demo/ 这段用 glob 通配符（"03-*"）而不是把中文目录名原样打在代码里，
+    是为了从根源上避开上面说的 NFC/NFD 编码不一致问题——不需要精确匹配字节，
+    glob 自己会去读磁盘上实际存在的目录项。
+    """
+    learning_root = os.path.dirname(PRODUCT_ROOT)  # AI产品转型学习系统/
+    legacy_matches = glob.glob(os.path.join(learning_root, "03-*", "demo", ".env.deepseek"))
+    return [os.path.join(PRODUCT_ROOT, ".env")] + legacy_matches
+
+
+def _load_local_env_file():
+    """本地便捷 key 加载：让你不用每次开新终端都手动 export 一遍。
+
+    从本地 .env 文件里读 DEEPSEEK_API_KEY / ANTHROPIC_API_KEY 写进当前进程的环境变量。
+    只在环境变量里**还没有**对应 key 时才会用文件里的值——真正手动 export 出来的值优先级
+    更高，不会被文件覆盖。这个文件只在你自己的电脑上存在，从来不会被 git 提交（.gitignore
+    里 `.env` / `.env.*` 两条规则已经覆盖了下面两个候选路径），这个函数也从来不会把读到的
+    值打印出来或发给任何地方，只是塞进这个python进程自己的环境变量。
+
+    返回实际读到的文件路径（没找到任何可用文件时返回 None），方便 server.py 启动时打印
+    "从哪个文件读到的"这类诊断信息，而不用暴露具体的 key 值。
+
+    按顺序找这几个位置，找到第一个存在的就用：
+      1) 05-产品原型/.env —— 当前产品目录下的规范位置，自己新建一个文件、写一行
+         DEEPSEEK_API_KEY=你的key 就行
+      2) 03-学习成果/demo/.env.deepseek —— 更早之前存的位置，继续兼容，不强制你搬家
+    """
+    for raw_path in _find_env_candidates():
+        path = _resolve_existing_path(raw_path)
+        if not path:
+            continue
+        try:
+            with open(path, "r", encoding="utf-8-sig") as f:  # utf-8-sig 顺手兼容文件开头可能带的BOM
+                loaded_any = False
+                for line in f:
+                    line = line.strip()
+                    if not line or line.startswith("#") or "=" not in line:
+                        continue
+                    key, _, value = line.partition("=")
+                    key = key.strip()
+                    value = value.strip().strip('"').strip("'")
+                    if key and value and key not in os.environ:
+                        os.environ[key] = value
+                        loaded_any = True
+            if loaded_any:
+                return path
+        except OSError:
+            continue  # 这个候选读不了就试下一个，都读不到的话 has_llm_credentials() 会给出清晰提示
+    return None
+
+
+LOADED_ENV_FILE = _load_local_env_file()
 
 ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages"
 ANTHROPIC_VERSION = "2023-06-01"

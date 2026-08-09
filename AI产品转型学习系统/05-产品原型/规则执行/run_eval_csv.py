@@ -97,7 +97,14 @@ def evaluate_one(case, config):
             "actual_action": actual["action"],
             "actual_risk_level": actual["risk_level"],
             "actual_rationale": actual.get("rationale", ""),
-            "exact_category": normalize_category_id(actual["matched_category"]) == case["expected_category"],
+            # 有些数据集（比如简化过的300case v2）不带分类标注，expected_category是None，
+            # 这种情况下"分类判没判对"这件事根本无从谈起，用None表示"这个维度不参与评测"，
+            # 不能算False——False意味着"判错了"，但事实是我们压根没有标准答案可比对。
+            "exact_category": (
+                normalize_category_id(actual["matched_category"]) == case["expected_category"]
+                if case["expected_category"] is not None
+                else None
+            ),
             "exact_action": (
                 normalize_action_for_diagnostic(actual["action"])
                 == normalize_action_for_diagnostic(case["expected_action"])
@@ -113,7 +120,7 @@ def evaluate_one(case, config):
             "actual_action": None,
             "actual_risk_level": None,
             "actual_rationale": "",
-            "exact_category": False,
+            "exact_category": False if case["expected_category"] is not None else None,
             "exact_action": None,
             "status": f"ERROR: {e}",
         }
@@ -170,11 +177,15 @@ def build_summary(results):
     errored = [r for r in results if r["status"] != "OK"]
     action_labeled = [r for r in results if r["exact_action"] is not None]
     exact_action_hits = sum(1 for r in action_labeled if r["exact_action"])
-    exact_category_hits = sum(1 for r in results if r["exact_category"])
+    # 只在"有分类标注"的case里算分类准确率——None表示这条case压根没有标准答案可比对，
+    # 不能跟"判错了"混在一起算，不然一个不带分类的数据集会显示成离谱的0%准确率。
+    category_labeled = [r for r in results if r["exact_category"] is not None]
+    exact_category_hits = sum(1 for r in category_labeled if r["exact_category"])
 
     critical = [r for r in results if r["risk_level"] in HIGH_RISK_LEVELS]
     critical_caught = [r for r in critical if r["actual_risk_level"] in HIGH_RISK_LEVELS]
-    critical_exact_category = [r for r in critical if r["exact_category"]]
+    critical_category_labeled = [r for r in critical if r["exact_category"] is not None]
+    critical_exact_category = [r for r in critical_category_labeled if r["exact_category"]]
 
     expected_medium = [r for r in results if r["risk_level"] in MEDIUM_RISK_LEVELS]
     predicted_medium = [r for r in tested if r["actual_risk_level"] in MEDIUM_RISK_LEVELS]
@@ -185,9 +196,11 @@ def build_summary(results):
 
     per_category = defaultdict(lambda: {"total": 0, "exact_category": 0, "exact_action": 0, "action_labeled": 0})
     for r in results:
+        if r["expected_category"] is None:
+            continue  # 没有分类标注的case不进这张按类别拆解的表，不然会多出一个假的"None"分类
         stat = per_category[r["expected_category"]]
         stat["total"] += 1
-        stat["exact_category"] += int(r["exact_category"])
+        stat["exact_category"] += int(bool(r["exact_category"]))
         if r["exact_action"] is not None:
             stat["action_labeled"] += 1
             stat["exact_action"] += int(r["exact_action"])
@@ -198,9 +211,13 @@ def build_summary(results):
         "tested": len(tested),
         "errored": len(errored),
         "overall_exact_action_accuracy": exact_action_hits / len(action_labeled) if action_labeled else None,
-        "overall_exact_category_accuracy": exact_category_hits / total if total else 0,
+        "overall_exact_category_accuracy": (
+            exact_category_hits / len(category_labeled) if category_labeled else None
+        ),
         "critical_recall_release_gate": len(critical_caught) / len(critical) if critical else 0,
-        "critical_exact_category_recall_diagnostic": len(critical_exact_category) / len(critical) if critical else 0,
+        "critical_exact_category_recall_diagnostic": (
+            len(critical_exact_category) / len(critical_category_labeled) if critical_category_labeled else None
+        ),
         "medium_precision_release_gate": len(true_medium_pred) / len(predicted_medium) if predicted_medium else 0,
         "medium_recall_diagnostic": (
             sum(1 for r in expected_medium if r["actual_risk_level"] in MEDIUM_RISK_LEVELS) / len(expected_medium)
@@ -211,6 +228,7 @@ def build_summary(results):
         "critical_counts": {"caught": len(critical_caught), "total": len(critical)},
         "medium_precision_counts": {"tp": len(true_medium_pred), "predicted": len(predicted_medium)},
         "low_fp_counts": {"fp": len(low_false_positives), "total": len(expected_low)},
+        "has_category_labels": len(category_labeled) > 0,
         "per_category": {
             cat: {
                 "total": stat["total"],
@@ -222,7 +240,7 @@ def build_summary(results):
             for cat, stat in sorted(per_category.items())
         },
         "action_failures": [r for r in results if r["exact_action"] is False],
-        "category_failures": [r for r in results if not r["exact_category"]],
+        "category_failures": [r for r in results if r["exact_category"] is False],
         "errors": errored,
     }
 
@@ -245,25 +263,29 @@ def print_summary(csv_path, summary):
         f"（{summary['low_fp_counts']['fp']}/{summary['low_fp_counts']['total']}）"
     )
     print()
-    print(
-        "Diagnostic 指标："
-        f"\n- Overall Exact Category Accuracy：{summary['overall_exact_category_accuracy']:.0%}"
-        f"\n- Critical Exact Category Recall：{summary['critical_exact_category_recall_diagnostic']:.0%}"
-        f"\n- Medium Recall：{summary['medium_recall_diagnostic']:.0%}"
-    )
+    print("Diagnostic 指标：")
+    if summary["overall_exact_category_accuracy"] is not None:
+        print(f"- Overall Exact Category Accuracy：{summary['overall_exact_category_accuracy']:.0%}")
+        print(f"- Critical Exact Category Recall：{summary['critical_exact_category_recall_diagnostic']:.0%}")
+    else:
+        print("- Overall/Critical Exact Category Accuracy：当前数据集没有分类标注，不纳入评测")
+    print(f"- Medium Recall：{summary['medium_recall_diagnostic']:.0%}")
     if summary["overall_exact_action_accuracy"] is not None:
         print(f"- Overall Exact Action Accuracy：{summary['overall_exact_action_accuracy']:.0%}")
     else:
         print("- Overall Exact Action Accuracy：当前数据集未提供或未使用预期动作，不纳入评测")
-    print("\n按类别结果：")
-    for cat, stat in summary["per_category"].items():
-        parts = [
-            f"- {cat}: total={stat['total']}",
-            f"exact_category_accuracy={stat['exact_category_accuracy']:.0%}",
-        ]
-        if stat["exact_action_accuracy"] is not None:
-            parts.append(f"exact_action_accuracy={stat['exact_action_accuracy']:.0%}")
-        print(", ".join(parts))
+    if not summary["per_category"]:
+        print("\n（当前数据集没有分类标注，跳过按类别拆解）")
+    else:
+        print("\n按类别结果：")
+        for cat, stat in summary["per_category"].items():
+            parts = [
+                f"- {cat}: total={stat['total']}",
+                f"exact_category_accuracy={stat['exact_category_accuracy']:.0%}",
+            ]
+            if stat["exact_action_accuracy"] is not None:
+                parts.append(f"exact_action_accuracy={stat['exact_action_accuracy']:.0%}")
+            print(", ".join(parts))
     if summary["action_failures"]:
         print("\n前 12 条 action failure：")
         for row in summary["action_failures"][:12]:

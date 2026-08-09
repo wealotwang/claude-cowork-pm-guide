@@ -104,7 +104,10 @@ def load_csv_cases(csv_path, config=None):
     with open(csv_path, "r", encoding="utf-8-sig", newline="") as f:
         reader = csv.DictReader(f)
         cols = _resolve_columns(reader.fieldnames)
-        missing_required = [k for k in ("category", "text") if k not in cols]
+        # 分类列不再是必填项：2026-08-09起规则改成4大类之后，
+        # 有些数据集（比如简化过的300case v2）干脆不带分类列，只留风险等级+处置动作，
+        # 这样也能评测，只是评测时不会有"按类别拆解"这一层，退化成只看风险等级/动作判得对不对。
+        missing_required = [k for k in ("text",) if k not in cols]
         if missing_required:
             raise ValueError(
                 f"{os.path.basename(csv_path)} 缺少必需的列：{missing_required}。"
@@ -117,7 +120,9 @@ def load_csv_cases(csv_path, config=None):
                 return row.get(col, default) if col else default
 
             case_id = str(get("id") or f"row{idx}").strip()
-            category = normalize_category_id(get("category"))
+            # 没有分类列，或者这一行分类值是空的，都统一用 None 表示"这条case不带分类标注"，
+            # 不要用空字符串——None 才能跟 expected_action 的 None 用同一套"这个维度不参与评测"逻辑。
+            category = normalize_category_id(get("category")) or None
             risk_level = str(get("risk_level") or "").strip()
 
             # 数据质量检查：只报"真的错了"的，不报"已知未实现"的
