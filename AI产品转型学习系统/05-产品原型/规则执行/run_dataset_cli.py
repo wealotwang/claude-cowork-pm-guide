@@ -23,6 +23,7 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 PRODUCT_ROOT = os.path.dirname(SCRIPT_DIR)
 sys.path.insert(0, SCRIPT_DIR)
 sys.path.insert(0, os.path.join(PRODUCT_ROOT, "分析报告"))
+sys.path.insert(0, PRODUCT_ROOT)  # server.py 在产品根目录，不在这个脚本自己的目录里，之前漏加了这一行会导致 import server 直接崩溃
 
 import checker  # noqa: E402
 import datasets as ds  # noqa: E402
@@ -97,12 +98,18 @@ def main():
     record, out_path = server.run_dataset(dataset_key, workers=args.workers)
     s = record["summary"]
 
+    def _pct(v):
+        return "不适用（这份数据集没有分类/中危标注）" if v is None else f"{v:.0%}"
+
     print(f"\n跑完了：{record['run_id']}")
     print(f"  总用例数：{s['total']}　成功：{s['tested']}　报错：{s['errored']}")
-    print(f"  整体类别准确率：{s['overall_exact_category_accuracy']:.0%}")
-    print(f"  高危 Recall：{s['critical_recall_release_gate']:.0%}")
-    print(f"  中危 Precision：{s['medium_precision_release_gate']:.0%}")
-    print(f"  低危误报率：{s['low_false_positive_rate_release_gate']:.0%}")
+    print(f"  整体类别准确率：{_pct(s['overall_exact_category_accuracy'])}")
+    print(f"  高危 Recall（召回率，漏报的反面）：{_pct(s['critical_recall_release_gate'])}")
+    if s.get("has_category_labels", True):
+        print(f"  中危 Precision：{_pct(s['medium_precision_release_gate'])}")
+    else:
+        print("  中危 Precision：不适用（当前4大类规则已经没有Medium这一档了，这个指标先跳过）")
+    print(f"  低危误报率（FPR）：{_pct(s['low_false_positive_rate_release_gate'])}")
     if record["data_issues"]:
         print(f"  数据质量提示：{len(record['data_issues'])} 条，详见结果文件")
     print(f"  完整结果：{out_path}")
@@ -112,7 +119,7 @@ def main():
         rep = report_mod.build_report(record)
         html_path = report_mod.export_html(rep)
         print(f"  分析报告已生成：{html_path}")
-        print(f"  （范围内真实准确率：{rep['in_scope']['accuracy']:.0%}，排除了还没实现的类别之后的真实水平）")
+        print(f"  （范围内真实准确率：{_pct(rep['in_scope']['accuracy'])}，排除了还没实现的类别之后的真实水平）")
     except Exception as e:
         print(f"  （分析报告生成时出了点问题，不影响跑分结果本身：{e}）")
 
