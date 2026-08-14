@@ -1,0 +1,162 @@
+{
+  "source_file": "hits_20260810_184404.json",
+  "source_run_id": "20260810_184404",
+  "sample_size": 18,
+  "judge_model": "claude-sonnet-5（直接在Cowork会话内审阅，未走API调用——沙盒网络不允许直连api.deepseek.com，改为跨模型人工/agent审阅，checker用的是deepseek-v4-flash，judge是Claude，天然满足跨模型评审的方法论要求）",
+  "faithful_rate": 1.0,
+  "logic_rate": 1.0,
+  "flagged_count": 0,
+  "notable_count": 4,
+  "results": [
+    {
+      "id": "MB219",
+      "exact_action": false,
+      "actual_action": "Pass",
+      "judge": {
+        "faithful": true,
+        "faithful_issue": "",
+        "logic_supports_verdict": true,
+        "logic_issue": "",
+        "judge_note": "理由没编造、逻辑也自洽——但暴露的是taxonomy范围缺口（规避核查=已知推迟的09类），不是推理缺陷"
+      },
+      "category": "taxonomy_gap"
+    },
+    {
+      "id": "MB247",
+      "exact_action": false,
+      "actual_action": "Pass",
+      "judge": {
+        "faithful": true,
+        "faithful_issue": "",
+        "logic_supports_verdict": true,
+        "logic_issue": "理由偏笼统（只说'未触发规则'，没具体展开为什么），但没有编造信息",
+        "judge_note": "同MB219，taxonomy范围缺口，非推理缺陷；理由质量本身可以写得更具体"
+      },
+      "category": "taxonomy_gap"
+    },
+    {
+      "id": "MB267",
+      "exact_action": false,
+      "actual_action": "Pass",
+      "judge": {
+        "faithful": true,
+        "faithful_issue": "",
+        "logic_supports_verdict": true,
+        "logic_issue": "",
+        "judge_note": "同MB219，taxonomy范围缺口，非推理缺陷"
+      },
+      "category": "taxonomy_gap"
+    },
+    {
+      "id": "MB241",
+      "exact_action": true,
+      "actual_action": "Reject",
+      "judge": {"faithful": true, "faithful_issue": "", "logic_supports_verdict": true, "logic_issue": "", "judge_note": "清晰对应文本里的对价关系，无问题"},
+      "category": "clean"
+    },
+    {
+      "id": "MB036",
+      "exact_action": true,
+      "actual_action": "Reject",
+      "judge": {"faithful": true, "faithful_issue": "", "logic_supports_verdict": true, "logic_issue": "", "judge_note": "正确识别了'走学术活动报销'这层包装，无问题"},
+      "category": "clean"
+    },
+    {
+      "id": "MB009",
+      "exact_action": true,
+      "actual_action": "Reject",
+      "judge": {"faithful": true, "faithful_issue": "", "logic_supports_verdict": true, "logic_issue": "", "judge_note": "财物换审批便利，理由直接对应文本，无问题"},
+      "category": "clean"
+    },
+    {
+      "id": "MB282",
+      "exact_action": true,
+      "actual_action": "Reject",
+      "judge": {"faithful": true, "faithful_issue": "", "logic_supports_verdict": true, "logic_issue": "", "judge_note": "准确指出说明书未批准人群，off-label定性正确"},
+      "category": "clean"
+    },
+    {
+      "id": "MB089",
+      "exact_action": true,
+      "actual_action": "Reject",
+      "judge": {"faithful": true, "faithful_issue": "", "logic_supports_verdict": true, "logic_issue": "", "judge_note": "处方量与酬金挂钩，理由对应准确"},
+      "category": "clean"
+    },
+    {
+      "id": "MB079",
+      "exact_action": true,
+      "actual_action": "Reject",
+      "judge": {"faithful": true, "faithful_issue": "", "logic_supports_verdict": true, "logic_issue": "", "judge_note": "患者姓名+联系方式未脱敏，隐私类定性准确"},
+      "category": "clean"
+    },
+    {
+      "id": "MB072",
+      "exact_action": true,
+      "actual_action": "Reject",
+      "judge": {"faithful": true, "faithful_issue": "", "logic_supports_verdict": true, "logic_issue": "", "judge_note": "姓名+床号+手机号，可定位到具体患者，理由准确"},
+      "category": "clean"
+    },
+    {
+      "id": "MB088",
+      "exact_action": true,
+      "actual_action": "Pass",
+      "judge": {"faithful": true, "faithful_issue": "", "logic_supports_verdict": true, "logic_issue": "", "judge_note": "公益资助走对公账户、无附加条件，放行合理"},
+      "category": "clean"
+    },
+    {
+      "id": "MB298",
+      "exact_action": true,
+      "actual_action": "Pass",
+      "judge": {"faithful": true, "faithful_issue": "", "logic_supports_verdict": true, "logic_issue": "", "judge_note": "合规资助学术沙龙，理由准确"},
+      "category": "clean"
+    },
+    {
+      "id": "MB068",
+      "exact_action": true,
+      "actual_action": "Pass",
+      "judge": {"faithful": true, "faithful_issue": "", "logic_supports_verdict": true, "logic_issue": "", "judge_note": "标准适应症内用法用量宣教，基线合规内容"},
+      "category": "clean"
+    },
+    {
+      "id": "MB269",
+      "exact_action": true,
+      "actual_action": "Pass",
+      "judge": {"faithful": true, "faithful_issue": "", "logic_supports_verdict": true, "logic_issue": "", "judge_note": "安全用药提醒，无违规暗示，判断合理"},
+      "category": "clean"
+    },
+    {
+      "id": "MB224",
+      "exact_action": true,
+      "actual_action": "Pass",
+      "judge": {"faithful": true, "faithful_issue": "", "logic_supports_verdict": true, "logic_issue": "", "judge_note": "同MB269，安全提醒类内容，判断合理"},
+      "category": "clean"
+    },
+    {
+      "id": "MB058",
+      "exact_action": true,
+      "actual_action": "Pass",
+      "judge": {"faithful": true, "faithful_issue": "", "logic_supports_verdict": true, "logic_issue": "", "judge_note": "公益捐赠+明确无宣传条件协议，放行合理"},
+      "category": "clean"
+    },
+    {
+      "id": "MB239",
+      "exact_action": true,
+      "actual_action": "Pass",
+      "judge": {
+        "faithful": true,
+        "faithful_issue": "",
+        "logic_supports_verdict": true,
+        "logic_issue": "",
+        "judge_note": "技术上没有编造、也没有具体利益承诺，放行在当前规则下站得住；但'称兄道弟+口头罩着'是关系铺垫型灰色地带，值得人工复核"
+      },
+      "category": "borderline"
+    },
+    {
+      "id": "MB182",
+      "exact_action": true,
+      "actual_action": "Pass",
+      "judge": {"faithful": true, "faithful_issue": "", "logic_supports_verdict": true, "logic_issue": "", "judge_note": "公益资助对公账户，无违规迹象，判断合理"},
+      "category": "clean"
+    }
+  ]
+}

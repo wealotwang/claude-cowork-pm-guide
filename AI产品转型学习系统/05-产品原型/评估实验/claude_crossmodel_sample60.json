@@ -1,0 +1,422 @@
+[
+  {
+    "id": "MB001",
+    "text": "拜访血液科王主任，沟通美罗华在FL维持治疗的用量，承诺只要下月指标达成，为其个人报销私家车全年的商业保险。",
+    "expected_action": "Reject",
+    "deepseek_action": "Reject",
+    "deepseek_rationale": "承诺为医生个人报销私家车商业保险，且以指标达成为条件，属于以个人好处换取业务结果的对价关系。"
+  },
+  {
+    "id": "MB003",
+    "text": "答应给张医生安排其爱人到我司合作伙伴的 DTP 药房挂名任职，以此换取他在科室内部优先推荐美罗华。",
+    "expected_action": "Reject",
+    "deepseek_action": "Reject",
+    "deepseek_rationale": "以安排家属挂名任职为利益输送条件，换取医生优先推荐产品，构成与处方挂钩的不正当利益交换"
+  },
+  {
+    "id": "MB017",
+    "text": "拜访血液科刘主任，递交了美罗华最新的标准说明书，并客观介绍了其在获批适应症（如DLBCL、FL）中的用法用量。",
+    "expected_action": "Pass",
+    "deepseek_action": "Pass",
+    "deepseek_rationale": "拜访内容仅涉及递交说明书并客观介绍获批适应症和用法用量，未触发任何违规规则，属于正常合规拜访。"
+  },
+  {
+    "id": "MB025",
+    "text": "拜访陈大夫，其分享了一张包含多名患者姓名、床位号及具体用药剂量的白板照片，我直接拍照上传。",
+    "expected_action": "Reject",
+    "deepseek_action": "Reject",
+    "deepseek_rationale": "拜访记录中提及拍摄并上传包含多名患者姓名、床位号及用药剂量的白板照片，涉及可定位到具体患者的隐私信息，属于违规记录。"
+  },
+  {
+    "id": "MB026",
+    "text": "记录患者赵某的基因检测报告结果（EGFR/CD20等），并备注了该患者是该院退休老领导。",
+    "expected_action": "Reject",
+    "deepseek_action": "Reject",
+    "deepseek_rationale": "记录中包含具名患者（赵某）的基因检测报告结果，并附加其退休老领导身份，足以定位到具体个人，属于患者隐私信息泄露。"
+  },
+  {
+    "id": "MB029",
+    "text": "记录随访案例：姜老先生，80 岁，家属联系电话 13900009999（姜小姜），拟后期安排赠药流程。",
+    "expected_action": "Reject",
+    "deepseek_action": "Reject",
+    "deepseek_rationale": "记录中出现具体患者称呼及家属联系电话，可定位到具体个人，属于患者隐私信息泄露。"
+  },
+  {
+    "id": "MB032",
+    "text": "主任询问为何本月的讲课费还没到账，我回复是因为他上个季度的处方量波动太大，公司正在重新评估。",
+    "expected_action": "Reject",
+    "deepseek_action": "Reject",
+    "deepseek_rationale": "讲课费发放与处方量波动直接挂钩，暗示以好处换处方量，构成商业贿赂。"
+  },
+  {
+    "id": "MB033",
+    "text": "答应只要李主任同意将美罗华纳入科室临时采购目录，我们就全额资助其科室举办年度学术研讨会。",
+    "expected_action": "Reject",
+    "deepseek_action": "Reject",
+    "deepseek_rationale": "以全额资助科室学术研讨会为条件，换取美罗华纳入科室临时采购目录，构成以利益交换业务结果的违规行为。"
+  },
+  {
+    "id": "MB036",
+    "text": "答应给赵主任支付高额讲课费，以此表达对他前期开具我药销量的感谢，已走“学术活动”费报销。",
+    "expected_action": "Reject",
+    "deepseek_action": "Reject",
+    "deepseek_rationale": "高额讲课费用于感谢医生前期处方量，构成以利益换取处方支持的商业贿赂，即使走学术活动报销流程仍属违规。"
+  },
+  {
+    "id": "MB039",
+    "text": "与郑大夫交流，他提到最近处方量很大很辛苦，我表示会向公司多申请几场“专家调研”，帮他多拿点酬金。",
+    "expected_action": "Reject",
+    "deepseek_action": "Reject",
+    "deepseek_rationale": "代表以“专家调研”酬金名义给予医生好处，并结合“处方量很大很辛苦”的语境，暗示了酬金与处方量挂钩，构成商业贿赂。"
+  },
+  {
+    "id": "MB058",
+    "text": "向科室合规开展的“淋巴瘤关爱基金”进行公益捐赠，已通过医院对公账户汇款，并签署了不带任何产品宣传条件的捐赠协议。",
+    "expected_action": "Pass",
+    "deepseek_action": "Pass",
+    "deepseek_rationale": "公益捐赠通过医院对公账户进行，协议明确不带产品宣传条件，未与处方等业务结果挂钩，未触发任何违规规则。"
+  },
+  {
+    "id": "MB067",
+    "text": "建议医生将美罗华剂量从 375mg/m2 提高到 500mg/m2，称这样对高肿瘤负荷患者更有效。",
+    "expected_action": "Reject",
+    "deepseek_action": "Reject",
+    "deepseek_rationale": "拜访记录中主动建议将美罗华剂量提高至说明书推荐剂量之上，属于超出说明书推荐范围的剂量推荐，命中Off-label推广规则。"
+  },
+  {
+    "id": "MB072",
+    "text": "记录随访信息：血液科3床王大爷，手机13812345678，美罗华首轮滴注后出现轻微皮疹。",
+    "expected_action": "Reject",
+    "deepseek_action": "Reject",
+    "deepseek_rationale": "记录中出现了患者姓名（王大爷）、床号及手机号，属于可定位到具体患者的个人信息，命中隐私泄露规则。"
+  },
+  {
+    "id": "MB077",
+    "text": "跟踪重点患者：孙建军（身份证 310115...），附带了其在南京鼓楼医院的完整出院小结内容。",
+    "expected_action": "Reject",
+    "deepseek_action": "Reject",
+    "deepseek_rationale": "记录中出现具体患者姓名、身份证号及完整出院小结内容，属于可定位到具体个人的患者隐私信息。"
+  },
+  {
+    "id": "MB081",
+    "text": "答应只要陈主任这个月能在美罗华处方量上突破 50 盒，下个月我就向公司医学部申请，为其支付参加全国血液学大会的差旅费。",
+    "expected_action": "Reject",
+    "deepseek_action": "Reject",
+    "deepseek_rationale": "承诺以支付差旅费为条件换取处方量突破，构成利益输送与处方挂钩的违规行为。"
+  },
+  {
+    "id": "MB092",
+    "text": "告知医生，使用美罗华绝对没有任何副作用，患者用了之后“就像喝矿泉水一样安全”。",
+    "expected_action": "Reject",
+    "deepseek_action": "Reject",
+    "deepseek_rationale": "宣称美罗华'绝对没有任何副作用'并比喻为'像喝矿泉水一样安全'，属于对药品安全性的绝对化夸大和否认已知不良反应，违反规则04。"
+  },
+  {
+    "id": "MB093",
+    "text": "根据美罗华 III 期临床研究公布的数据，其 ORR 在滤泡性淋巴瘤领域显著优于对照组，数据引自官方说明书。",
+    "expected_action": "Pass",
+    "deepseek_action": "Pass",
+    "deepseek_rationale": "文本客观引用官方说明书中的临床研究数据，未涉及夸大疗效、超适应症推广或任何违规利益交换，属于正常学术交流。"
+  },
+  {
+    "id": "MB107",
+    "text": "记录了一例典型病例：患者王*(身份证号：3101121970...)，男，FL Ⅲ期，用药后乙肝病毒滴度监测结果显示为阴性。",
+    "expected_action": "Reject",
+    "deepseek_action": "Reject",
+    "deepseek_rationale": "记录中出现患者姓氏及身份证号片段，可定位到具体个人，属于患者隐私信息泄露。"
+  },
+  {
+    "id": "MB108",
+    "text": "偷拍并上传了护士站的“每日输液单”，其中包含 15 名使用美罗华患者的床位号、姓名、剂量及过敏史等敏感信息。",
+    "expected_action": "Reject",
+    "deepseek_action": "Reject",
+    "deepseek_rationale": "文本明确包含偷拍并上传患者敏感信息（姓名、床位号、剂量、过敏史），属于非法获取和记录患者隐私数据。"
+  },
+  {
+    "id": "MB119",
+    "text": "承诺如果美罗华能进入该院的一线医保报销目录，我们将全额资助科室护士长全家去海南旅游一周。",
+    "expected_action": "Reject",
+    "deepseek_action": "Reject",
+    "deepseek_rationale": "承诺资助护士长全家旅游，以美罗华进入医保报销目录为条件，属于将旅游好处与业务结果挂钩的违规行为。"
+  },
+  {
+    "id": "MB122",
+    "text": "建议急诊室医生将美罗华由静脉缓慢滴注改为静脉推注，声称可以在 5 分钟内快速起效，缓解重症。",
+    "expected_action": "Reject",
+    "deepseek_action": "Reject",
+    "deepseek_rationale": "建议将美罗华由说明书规定的静脉缓慢滴注改为静脉推注，属于超出说明书推荐给药方式的超说明书推广，且声称5分钟快速起效涉嫌夸大疗效。"
+  },
+  {
+    "id": "MB125",
+    "text": "CRM 自由文本记录：患者孙*(住址: 南京市玄武区中山路XX号)，电话 139XXXX，需跟踪用药后的发热情况。",
+    "expected_action": "Reject",
+    "deepseek_action": "Reject",
+    "deepseek_rationale": "记录中包含患者住址和电话，能定位到具体个人，属于患者隐私泄露。"
+  },
+  {
+    "id": "MB133",
+    "text": "中午和王主任在办公室称兄道弟聊了半天，主任对我们美罗华的临床安全性表示非常认可，答应以后多关照。",
+    "expected_action": "Pass",
+    "deepseek_action": "Pass",
+    "deepseek_rationale": "文本仅描述与主任维持良好关系及对产品安全性的认可，未涉及利益交换、不良事件、隐私泄露或超适应症推广，属于正常合规拜访。"
+  },
+  {
+    "id": "MB134",
+    "text": "主动提醒医生在处方美罗华前，必须确认患者已完成乙肝（HBV）筛查，并在滴注期间严格执行心电监护。",
+    "expected_action": "Pass",
+    "deepseek_action": "Pass",
+    "deepseek_rationale": "内容为客观规范的安全用药提醒，未涉及商业贿赂、药物安全淡化处理、隐私泄露或超适应症推广等违规情形。"
+  },
+  {
+    "id": "MB135",
+    "text": "帮王主任报销了私家车全年的商业保险和违章罚款，主任表示本月会把竞品的份额全部切给美罗华。",
+    "expected_action": "Reject",
+    "deepseek_action": "Reject",
+    "deepseek_rationale": "帮主任报销私家车全年商业保险和违章罚款属于给予个人好处，且明确以切换竞品份额为交换条件，构成利益输送。"
+  },
+  {
+    "id": "MB140",
+    "text": "医生询问美罗华在 GPA/MPA 领域的用法，我准确递交了说明书相关章节，并提示该药在严重活动性感染期禁用。",
+    "expected_action": "Pass",
+    "deepseek_action": "Pass",
+    "deepseek_rationale": "拜访内容围绕说明书用法和禁忌提示，未涉及商业贿赂、不良反应淡化、隐私数据或超适应症推广，属于合规学术交流。"
+  },
+  {
+    "id": "MB142",
+    "text": "记录了患者家属张**(手机号 138...)的联系方式，拟下周沟通赠药申请的银行卡信息。",
+    "expected_action": "Reject",
+    "deepseek_action": "Reject",
+    "deepseek_rationale": "记录中出现了患者家属姓名（张**）及手机号（138...），属于可定位到具体个人的隐私信息，命中隐私泄露规则。"
+  },
+  {
+    "id": "MB152",
+    "text": "答应按每张处方“积分”的形式，累积后为科室医生兑换等值的某品牌金豆子，鼓励科室全员优先开具美罗华。",
+    "expected_action": "Reject",
+    "deepseek_action": "Reject",
+    "deepseek_rationale": "以积分兑换实物金豆子作为利益输送，明确以鼓励优先开具美罗华为交换条件，构成处方挂钩的贿赂行为。"
+  },
+  {
+    "id": "MB159",
+    "text": "偷拍并上传了医生办公室的“重点随访墙”照片，其中包含 12 名淋巴瘤患者的姓名、联系方式及家庭住址。",
+    "expected_action": "Reject",
+    "deepseek_action": "Reject",
+    "deepseek_rationale": "拜访记录中偷拍并上传了包含12名淋巴瘤患者姓名、联系方式及家庭住址的照片，属于可定位到具体患者的隐私信息泄露。"
+  },
+  {
+    "id": "MB160",
+    "text": "统计了科室本月美罗华输注过程中发生的严重不良反应总数为 2 例，均为过敏性休克，未涉及任何患者个人身份信息。",
+    "expected_action": "Pass",
+    "deepseek_action": "Pass",
+    "deepseek_rationale": "文本仅记录科室严重不良反应汇总统计，未涉及具体患者身份信息，未淡化处理或下结论，未触发任何违规规则。"
+  },
+  {
+    "id": "MB163",
+    "text": "邀请刘教授作为讲者参加公司合规举办的全国 DLBCL 线上会议，服务费严格按照公司 FMV 标准支付，且讲者服务真实发生。",
+    "expected_action": "Pass",
+    "deepseek_action": "Pass",
+    "deepseek_rationale": "未提及任何处方挂钩、不良反应、隐私数据或超适应症推广，属于合规的讲者服务安排。"
+  },
+  {
+    "id": "MB164",
+    "text": "宣称美罗华是目前全球治疗 CD20 阳性肿瘤的“唯一终结者”，只要用药，患者 100% 能够获得治愈且终生不复发。",
+    "expected_action": "Reject",
+    "deepseek_action": "Reject",
+    "deepseek_rationale": "宣称药物为“唯一终结者”、治愈率100%且终生不复发，属于绝对化疗效承诺和夸大宣传，命中规则04。"
+  },
+  {
+    "id": "MB173",
+    "text": "拜访陈主任，中午在医院食堂请主任吃了个简餐，消费金额 32 元，期间交流了美罗华在 CLL 领域的一线医保报销政策。",
+    "expected_action": "Pass",
+    "deepseek_action": "Pass",
+    "deepseek_rationale": "拜访中请主任吃简餐未与处方量或业务结果挂钩，交流内容为医保报销政策，属正常学术交流，未触发任何违规规则。"
+  },
+  {
+    "id": "MB180",
+    "text": "答应郑大夫，只要本季度美罗华处方量排名全院第一，公司就资助他及其家属去美国参加明年的 ASH 年会。",
+    "expected_action": "Reject",
+    "deepseek_action": "Reject",
+    "deepseek_rationale": "以处方量排名全院第一为条件，承诺资助医生及家属参加海外会议，构成以利益交换处方的违规行为。"
+  },
+  {
+    "id": "MB182",
+    "text": "应医院伦理委员会要求，为医院开展的“淋巴瘤规范化诊疗”公益宣教项目提供资金资助，资金直接汇入医院对公账户。",
+    "expected_action": "Pass",
+    "deepseek_action": "Pass",
+    "deepseek_rationale": "内容为向医院对公账户提供公益项目资助，未与处方量、采购等业务结果挂钩，也未涉及其他违规情形。"
+  },
+  {
+    "id": "MB184",
+    "text": "向患者保证，只要按周期使用美罗华，3 天内肿大的淋巴结必定消失，治愈率接近 100%。",
+    "expected_action": "Reject",
+    "deepseek_action": "Reject",
+    "deepseek_rationale": "向患者保证必消失、治愈率接近100%，属于绝对化疗效承诺和夸大宣传，明显命中规则04。"
+  },
+  {
+    "id": "MB190",
+    "text": "拜访陈主任，因其生日将至，赠送了一份价值 48 元的定制医学期刊订阅会员，已备案为正常学术礼品。",
+    "expected_action": "Pass",
+    "deepseek_action": "Pass",
+    "deepseek_rationale": "赠送48元定制医学期刊订阅会员已备案，且未与处方量等业务结果挂钩，未触发任一违规规则。"
+  },
+  {
+    "id": "MB191",
+    "text": "建议风湿内科医生尝试将美罗华用于硬皮病的肺部受累治疗，声称国外虽未批但临床观察效果极佳。",
+    "expected_action": "Reject",
+    "deepseek_action": "Reject",
+    "deepseek_rationale": "建议将美罗华用于未获批的硬皮病肺部受累适应症，属于主动推荐说明书外用法，且声称临床观察效果极佳，构成off-label推广。"
+  },
+  {
+    "id": "MB193",
+    "text": "医生询问美罗华在 CLL 患者中的起始剂量，我准确递交了说明书相关章节，并强调需关注 3 级中性粒细胞减少风险。",
+    "expected_action": "Pass",
+    "deepseek_action": "Pass",
+    "deepseek_rationale": "代表按说明书提供剂量信息并客观提示风险，未涉及任何违规行为，属于正常学术交流。"
+  },
+  {
+    "id": "MB205",
+    "text": "拜访风湿免疫科，积极推荐美罗华用于所有类型的系统性血管炎治疗，并声称其“万能免疫调节”效果远超现有疗法。",
+    "expected_action": "Reject",
+    "deepseek_action": "Reject",
+    "deepseek_rationale": "推荐美罗华用于所有类型的系统性血管炎，属于超适应症推广，且声称'万能免疫调节'效果远超现有疗法，构成夸大疗效。"
+  },
+  {
+    "id": "MB208",
+    "text": "在查房中听说有一例 FL 患者在使用美罗华首次滴注时出现严重喉头水肿，我担心影响销量，私下建议护士按普通感冒处理，不要上报 PV 流程。",
+    "expected_action": "Reject",
+    "deepseek_action": "Reject",
+    "deepseek_rationale": "患者出现严重喉头水肿属于不良反应，代表不仅未记录上报，还私下建议按普通感冒处理并阻止上报PV流程，属于淡化处理违规。"
+  },
+  {
+    "id": "MB213",
+    "text": "讲课费沟通：回复郑主任因其科室上季度美罗华进货量下滑，公司正在重新评估其学术影响力，讲课费报销暂时缓一缓。",
+    "expected_action": "Reject",
+    "deepseek_action": "Reject",
+    "deepseek_rationale": "公司将讲课费报销与科室进货量下滑挂钩，暗示讲课费是换取采购量的条件，构成利益输送。"
+  },
+  {
+    "id": "MB219",
+    "text": "医院严查代表期间，我通过私下关系在门诊楼后的吸烟区拦截了王主任，并向其塞了一份最新的适应症资料。",
+    "expected_action": "Reject",
+    "deepseek_action": "Pass",
+    "deepseek_rationale": "文本未提及利益交换、不良反应、隐私数据或超说明书推广，仅描述私下接触和递交资料，未触发具体违规规则。"
+  },
+  {
+    "id": "MB220",
+    "text": "今天成功“搞定”了药剂科小王，他答应下周会把我们的合规进院资料优先送交主任签字。",
+    "expected_action": "Pass",
+    "deepseek_action": "Pass",
+    "deepseek_rationale": "文本仅为口语化表达，未涉及任何违规规则的具体行为，属于默认通过。"
+  },
+  {
+    "id": "MB223",
+    "text": "记录了随访患者李*(微信号: mathera_help_123)，并备注其已进入美罗华维持治疗期。",
+    "expected_action": "Reject",
+    "deepseek_action": "Reject",
+    "deepseek_rationale": "记录中出现患者姓氏及微信号，能定位到具体个人，属于患者隐私信息泄露。"
+  },
+  {
+    "id": "MB229",
+    "text": "拜访陈主任，主动递交了美罗华最新的 PML（进行性多灶性白质脑病）风险告知书，提醒关注用药期间的神经学症状。",
+    "expected_action": "Pass",
+    "deepseek_action": "Pass",
+    "deepseek_rationale": "拜访记录为主动递交风险告知书并提醒关注神经学症状，属于合规的药品安全信息传递，未触发任何违规规则。"
+  },
+  {
+    "id": "MB230",
+    "text": "主任询问讲课费发放进度，我回复因为他上个月美罗华处方量没达标，公司医学部还在审核其讲课资质，建议下月多关注。",
+    "expected_action": "Reject",
+    "deepseek_action": "Reject",
+    "deepseek_rationale": "将讲课费发放与处方量达标挂钩，明示或暗示用讲课费换取处方，构成商业贿赂。"
+  },
+  {
+    "id": "MB232",
+    "text": "为了缩短病房周转时间，建议护士将美罗华稀释液由滴注改为快速静脉推注，声称其安全性已得到验证。",
+    "expected_action": "Reject",
+    "deepseek_action": "Reject",
+    "deepseek_rationale": "将美罗华由静脉滴注改为快速静脉推注，属于超出说明书推荐给药方式的篡改用法，且声称安全性已验证，涉嫌夸大疗效或未经证实的安全性保证。"
+  },
+  {
+    "id": "MB234",
+    "text": "拜访血液科刘主任，应其要求赠送了一本价值 85 元的专业医学书籍《B 细胞淋巴瘤诊疗规范》，已在合规系统备案。",
+    "expected_action": "Pass",
+    "deepseek_action": "Pass",
+    "deepseek_rationale": "赠送专业书籍已备案且未与处方量等业务结果挂钩，属于正常学术交流，未触发任何违规规则。"
+  },
+  {
+    "id": "MB237",
+    "text": "邀请刘教授参加公司合规举办的全国性线上学术会议，讲课费严格按照公司 FMV 标准执行，且教授确实具备相应的专业造诣。",
+    "expected_action": "Pass",
+    "deepseek_action": "Pass",
+    "deepseek_rationale": "内容为合规学术会议邀请及讲课费按标准执行，未涉及处方挂钩或任何违规情形，属于默认通过类别。"
+  },
+  {
+    "id": "MB240",
+    "text": "建议儿科医生将美罗华用于 5 岁以下儿童的肾病综合征治疗，并声称国外文献显示效果极佳。",
+    "expected_action": "Reject",
+    "deepseek_action": "Reject",
+    "deepseek_rationale": "建议将美罗华用于5岁以下儿童肾病综合征，超出说明书适应症和人群，且声称效果极佳，属于off-label推广与夸大疗效。"
+  },
+  {
+    "id": "MB242",
+    "text": "CRM上传了重点患者随访表：患者赵建国（身份证 3201021965...），服药一个周期后肿瘤缩小。",
+    "expected_action": "Reject",
+    "deepseek_action": "Reject",
+    "deepseek_rationale": "拜访记录中包含患者姓名及身份证号，可定位到具体个人，属于患者隐私泄露。"
+  },
+  {
+    "id": "MB255",
+    "text": "为了提高病房输液椅的周转率，建议医生将美罗华 500mg 稀释液改为 10 分钟内静脉推注完毕，称国外已有成熟经验。",
+    "expected_action": "Reject",
+    "deepseek_action": "Reject",
+    "deepseek_rationale": "建议将美罗华改为10分钟内静脉推注，属于超出说明书推荐给药方式和速度的用法推荐，涉嫌off-label推广。"
+  },
+  {
+    "id": "MB258",
+    "text": "上传了随访记录照片，其中清晰可见 10 名患者的姓名、联系电话以及美罗华用药后的乙肝病毒载量变化值。",
+    "expected_action": "Reject",
+    "deepseek_action": "Reject",
+    "deepseek_rationale": "记录中上传的照片清晰可见10名患者的姓名、联系电话及用药后病毒载量，属于可定位到具体个人的患者隐私信息，且通过非正式附件形式记录，命中隐私泄露规则。"
+  },
+  {
+    "id": "MB259",
+    "text": "汇总记录了该院血液科本月美罗华受药人群分布：总计 25 人，平均年龄 58 岁，CD20 阳性率 100%，无具体患者识别信息。",
+    "expected_action": "Pass",
+    "deepseek_action": "Pass",
+    "deepseek_rationale": "文本为科室受药人群的脱敏汇总统计，未包含具体患者身份信息，也未触发其他违规规则。"
+  },
+  {
+    "id": "MB276",
+    "text": "承诺按每张美罗华处方返 120 元“学术积分”的形式，支持血液科青年医生的日常交通及外卖支出。",
+    "expected_action": "Reject",
+    "deepseek_action": "Reject",
+    "deepseek_rationale": "按处方量返现并用于医生个人日常支出，明示以处方为条件给予好处，构成利益交换。"
+  },
+  {
+    "id": "MB277",
+    "text": "向皮肤科建议美罗华用于常规治疗无效的重症寻常天疱疮，并主动提供了未经医学部审核的内部给药建议。",
+    "expected_action": "Reject",
+    "deepseek_action": "Reject",
+    "deepseek_rationale": "主动建议将美罗华用于未获批的天疱疮适应症，并提供未经医学部审核的内部给药建议，属于典型的超适应症推广行为。"
+  },
+  {
+    "id": "MB287",
+    "text": "介绍了美罗华在 CLL 领域的一线医保报销最新政策，强调报销前提需符合说明书标注的获批适应症。",
+    "expected_action": "Pass",
+    "deepseek_action": "Pass",
+    "deepseek_rationale": "内容为客观介绍医保报销政策并强调符合说明书适应症，未涉及任何违规行为。"
+  },
+  {
+    "id": "MB288",
+    "text": "今天和药剂科老张“打好了招呼”，美罗华下月的补库流程会走“绿色通道”优先处理。",
+    "expected_action": "Pass",
+    "deepseek_action": "Pass",
+    "deepseek_rationale": "文本仅提及与药剂科人员建立友好关系并优先处理补库流程，未涉及利益交换、不良反应、隐私数据或超适应症推广，属于口语化表达，应静默放行。"
+  },
+  {
+    "id": "MB293",
+    "text": "答应向支持美罗华在该院一线医保准入的关键人提供每年 5 万元的“医学咨询费”，不走公司正规合规供应商体系。",
+    "expected_action": "Reject",
+    "deepseek_action": "Reject",
+    "deepseek_rationale": "以医学咨询费名义向关键人提供每年5万元好处，且不走正规供应商体系，直接换取美罗华一线医保准入支持，构成利益输送与处方/准入挂钩的违规行为。"
+  }
+]
